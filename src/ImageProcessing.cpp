@@ -41,7 +41,7 @@ vector<RGBPixel> LoadImage(const string &fileName, int &width, int &height)
         jpeg_read_scanlines(&cinfo, &row, 1);
         for (int x = 0; x < width; x++)
         {
-            int idx = cinfo.output_scanline * width + x;
+            int idx = (cinfo.output_scanline - 1) * width + x;
             image[idx].r = row[x * 3];
             image[idx].g = row[x * 3 + 1];
             image[idx].b = row[x * 3 + 2];
