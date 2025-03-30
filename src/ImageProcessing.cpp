@@ -54,14 +54,14 @@ vector<RGBPixel> LoadImage(const string &fileName, int &width, int &height)
     return image;
 }
 
-RGBPixel CalculateAverageColor(const vector<RGBPixel> &image, int x, int y, int width, int height)
+RGBPixel CalculateAverageColor(const vector<RGBPixel> &image, int x, int y, int width, int height, int imageWidth)
 {
     uint32_t r = 0, g = 0, b = 0;
     for (int i = y; i < y + height; i++)
     {
         for (int j = x; j < x + width; j++)
         {
-            int idx = i * width + j;
+            int idx = i * imageWidth + j;
             r += image[idx].r;
             g += image[idx].g;
             b += image[idx].b;
@@ -71,14 +71,14 @@ RGBPixel CalculateAverageColor(const vector<RGBPixel> &image, int x, int y, int 
     return RGBPixel((u_int8_t)(r / totalPixel), (u_int8_t)(g / totalPixel), (u_int8_t)(b / totalPixel));
 }
 
-double CalculateVariance(const vector<RGBPixel> &image, int x, int y, int width, int height, const RGBPixel &avgColor)
+double CalculateVariance(const vector<RGBPixel> &image, int x, int y, int width, int height, const RGBPixel &avgColor, int imageWidth)
 {
     double variance = 0.0;
     for (int i = y; i < y + height; i++)
     {
         for (int j = x; j < x + width; j++)
         {
-            int idx = i * width + j;
+            int idx = i * imageWidth + j;
             variance += pow(image[idx].r - avgColor.r, 2) +
                         pow(image[idx].g - avgColor.g, 2) +
                         pow(image[idx].b - avgColor.b, 2);
@@ -128,13 +128,86 @@ void SaveImage(const string &fileName, const vector<RGBPixel> &image, int width,
     fclose(file);
 }
 
+unique_ptr<QuadTreeNode> BuildQuadTree(vector<RGBPixel> &image, int x, int y, int w, int h, double threshold, int minBlockSize, int errorMeasurementChoice, int imageWidth)
+{
+    RGBPixel avgColor = CalculateAverageColor(image, x, y, w, h, imageWidth);
+    double variance;
+
+    switch (errorMeasurementChoice)
+    {
+    case 1:
+        variance = CalculateVariance(image, x, y, w, h, avgColor, imageWidth);
+        break;
+    case 2:
+        // Mean Absolute Deviation (MAD)
+        break;
+    case 3:
+        // Max Pixel Difference
+        break;
+
+    case 4:
+        // Entropy
+        break;
+
+    case 5:
+        // SSIM
+        break;
+    }
+
+    if (variance < threshold || (w * h) < minBlockSize)
+    {
+        return make_unique<QuadTreeNode>(x, y, w, h, avgColor, true);
+    }
+
+    int halfWidth = w / 2;
+    int remWidth = w - halfWidth;
+    int halfHeight = h / 2;
+    int remHeight = h - halfHeight;
+
+    auto node = make_unique<QuadTreeNode>(x, y, w, h, avgColor, false);
+    node->atasKiri = BuildQuadTree(image, x, y, halfWidth, halfHeight, threshold, minBlockSize, errorMeasurementChoice, imageWidth);
+    node->atasKanan = BuildQuadTree(image, x + halfWidth, y, remWidth, halfHeight, threshold, minBlockSize, errorMeasurementChoice, imageWidth);
+    node->bawahKiri = BuildQuadTree(image, x, y + halfHeight, halfWidth, remHeight, threshold, minBlockSize, errorMeasurementChoice, imageWidth);
+    node->bawahKanan = BuildQuadTree(image, x + halfWidth, y + halfHeight, remWidth, remHeight, threshold, minBlockSize, errorMeasurementChoice, imageWidth);
+    return node;
+}
+
+void reconstructImage(vector<RGBPixel> &outputImage, unique_ptr<QuadTreeNode> &node, int imageWidth)
+{
+    if (!node)
+    {
+        throw ImageLoadException("Node is null");
+    }
+
+    if (node->isLeaf)
+    {
+        for (int i = 0; i < node->height; i++)
+        {
+            for (int j = 0; j < node->width; j++)
+            {
+                int idx = (node->y + i) * imageWidth + (node->x + j);
+                outputImage[idx] = node->color; // Node Image pada Leaf hanya diambil average nya saja
+            }
+        }
+        return;
+    }
+
+    reconstructImage(outputImage, node->atasKiri, imageWidth);
+    reconstructImage(outputImage, node->atasKanan, imageWidth);
+    reconstructImage(outputImage, node->bawahKiri, imageWidth);
+    reconstructImage(outputImage, node->bawahKanan, imageWidth);
+}
+
 int main()
 {
     try
     {
         int width, height;
-        vector<RGBPixel> image = LoadImage("ishow_speed.jpeg", width, height);
-        SaveImage("ishow_meat.jpeg", image, width, height);
+        vector<RGBPixel> image = LoadImage("misteri.jpeg", width, height);
+        auto root = BuildQuadTree(image, 0, 0, width, height, 120, 90, 1, width);
+        vector<RGBPixel> outputImage(width * height);
+        reconstructImage(outputImage, root, width);
+        SaveImage("misteri_hasil.jpeg", outputImage, width, height);
     }
     catch (const ImageLoadException &e)
     {
