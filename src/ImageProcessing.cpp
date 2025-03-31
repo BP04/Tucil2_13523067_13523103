@@ -132,12 +132,12 @@ void SaveImage(const string &fileName, const vector<RGBPixel> &image, int width,
 unique_ptr<QuadTreeNode> BuildQuadTree(vector<RGBPixel> &image, int x, int y, int w, int h, double threshold, int minBlockSize, int errorMeasurementChoice, int imageWidth)
 {
     RGBPixel avgColor = CalculateAverageColor(image, x, y, w, h, imageWidth);
-    double variance;
+    double error;
 
     switch (errorMeasurementChoice)
     {
     case 1:
-        variance = CalculateVariance(image, x, y, w, h, avgColor, imageWidth);
+        error = CalculateVariance(image, x, y, w, h, avgColor, imageWidth);
         break;
     case 2:
         // Mean Absolute Deviation (MAD)
@@ -155,7 +155,7 @@ unique_ptr<QuadTreeNode> BuildQuadTree(vector<RGBPixel> &image, int x, int y, in
         break;
     }
 
-    if (variance < threshold || (w * h) < minBlockSize)
+    if (error < threshold || (w * h) < minBlockSize)
     {
         return make_unique<QuadTreeNode>(x, y, w, h, avgColor, true);
     }
