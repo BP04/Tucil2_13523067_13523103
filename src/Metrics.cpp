@@ -35,42 +35,41 @@ double MeanAbsoluteDeviation(const vector<RGBPixel> &image, int x, int y, int wi
 double MaxPixelDifference(const vector<RGBPixel> &image, int x, int y, int width, int height, const RGBPixel &avgColor, int imageWidth)
 {
 
-    uint8_t minR = 255, maxR = 0;
-    uint8_t minG = 255, maxG = 0;
-    uint8_t minB = 255, maxB = 0;
+    double minR = 255, maxR = 0;
+    double minG = 255, maxG = 0;
+    double minB = 255, maxB = 0;
 
     for (int i = y; i < y + height; i++)
     {
         for (int j = x; j < x + width; j++)
         {
             int idx = i * imageWidth + j;
-            const auto &pix = image[idx];
 
             // Update min & max R
             if (pix.r < minR)
-                minR = pix.r;
+                minR = image[idx].r;
             if (pix.r > maxR)
-                maxR = pix.r;
+                maxR = image[idx].r;
 
             // Update min & max G
             if (pix.g < minG)
-                minG = pix.g;
+                minG = image[idx].g;
             if (pix.g > maxG)
-                maxG = pix.g;
+                maxG = image[idx].g;
 
             // Update min & max B
             if (pix.b < minB)
-                minB = pix.b;
+                minB = image[idx].b;
             if (pix.b > maxB)
-                maxB = pix.b;
+                maxB = image[idx].b;
         }
     }
 
-    double dR = static_cast<double>(maxR) - static_cast<double>(minR);
-    double dG = static_cast<double>(maxG) - static_cast<double>(minG);
-    double dB = static_cast<double>(maxB) - static_cast<double>(minB);
-    double dRGB = (dR + dG + dB) / 3.0;
-    return dRGB;
+    double diffR = maxR - minR;
+    double diffG = maxG - minG;
+    double diffB = maxB - minB;
+    double diffRGB = (diffR + diffG + diffB) / 3.0;
+    return diffRGB;
 }
 
 double CalculateEntropy(const vector<RGBPixel> &image, int x, int y, int width, int height, const RGBPixel &avgColor, int imageWidth)
