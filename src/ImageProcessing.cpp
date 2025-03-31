@@ -1,5 +1,6 @@
 #include <iostream>
 #include "QuadTree.hpp"
+#include "Metrics.hpp"
 #include <jpeglib.h>
 #include <jerror.h>
 #include <fstream>
