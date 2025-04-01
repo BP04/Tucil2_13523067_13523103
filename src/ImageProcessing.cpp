@@ -1,62 +1,88 @@
-#include <iostream>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+
 #include "QuadTree.hpp"
 #include "Metrics.hpp"
-#include <jpeglib.h>
+#include "ImageLoadException.hpp"
+
+#include <iostream>
 #include <jerror.h>
 #include <fstream>
 #include <string>
 
-vector<RGBPixel> LoadImage(const string &fileName, int &width, int &height)
-{
-    struct jpeg_decompress_struct cinfo;
-    struct jpeg_error_mgr jerr;
-    FILE *file = fopen(fileName.c_str(), "rb");
+std::vector<RGBPixel> LoadImage(std::string fileName, int &width, int &height) {
+    int channels;
+    unsigned char* image_data = stbi_load(fileName.c_str(), &width, &height, &channels, 0);
 
-    if (!file)
-    {
-        throw ImageLoadException("Cannot open file: " + fileName);
+    if (!image_data) {
+        throw ImageLoadException("Can't open file: " + fileName);
     }
 
-    cinfo.err = jpeg_std_error(&jerr);
-    jpeg_create_decompress(&cinfo);
-    jpeg_stdio_src(&cinfo, file);
-    jpeg_read_header(&cinfo, TRUE);
-    jpeg_start_decompress(&cinfo);
+    std::vector<RGBPixel> pixels;
+    
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            int index = (i * width + j) * channels;
 
-    width = cinfo.output_width;
-    height = cinfo.output_height;
-    int numChannels = cinfo.output_components;
+            uint8_t r = image_data[index + 0];
+            uint8_t g = image_data[index + 1];
+            uint8_t b = image_data[index + 2];
 
-    if (numChannels != 3)
-    {
-        jpeg_destroy_decompress(&cinfo);
-        fclose(file);
-        throw ImageLoadException("Only RGB are supported!!");
-    }
-
-    vector<RGBPixel> image(width * height);
-    JSAMPROW row = new unsigned char[width * 3];
-
-    while (cinfo.output_scanline < cinfo.output_height)
-    {
-        jpeg_read_scanlines(&cinfo, &row, 1);
-        for (int x = 0; x < width; x++)
-        {
-            int idx = (cinfo.output_scanline - 1) * width + x;
-            image[idx].r = row[x * 3];
-            image[idx].g = row[x * 3 + 1];
-            image[idx].b = row[x * 3 + 2];
+            pixels.emplace_back(RGBPixel(r, g, b));
         }
     }
 
-    delete[] row;
-    jpeg_finish_decompress(&cinfo);
-    fclose(file);
-    return image;
+    return pixels;
 }
 
-RGBPixel CalculateAverageColor(const vector<RGBPixel> &image, int x, int y, int width, int height, int imageWidth)
-{
+void SaveImage(std::string fileName, const std::vector<RGBPixel> &image, int width, int height) {
+    std::vector<uint8_t> rawData;
+    rawData.reserve(width * height * 3);
+
+    for (const auto& pixel : image) {
+        rawData.push_back(pixel.r);
+        rawData.push_back(pixel.g);
+        rawData.push_back(pixel.b);
+    }
+
+    std::string ext = fileName.substr(fileName.find_last_of('.') + 1);
+    for (int i = 0; ext[i] != '\0'; ++i) {
+        if ('A' <= ext[i] && ext[i] <= 'Z') {
+            ext[i] += 32;
+        }
+    }
+
+    bool success = false;
+
+    if (ext == "png") {
+        success = stbi_write_png(fileName.c_str(), width, height, 3, rawData.data(), width * 3);
+    }
+    else if (ext == "jpg" || ext == "jpeg") {
+        int quality = 100;
+        success = stbi_write_jpg(fileName.c_str(), width, height, 3, rawData.data(), quality);
+    }
+    else if (ext == "bmp") {
+        success = stbi_write_bmp(fileName.c_str(), width, height, 3, rawData.data());
+    }
+    else if (ext == "tga") {
+        success = stbi_write_tga(fileName.c_str(), width, height, 3, rawData.data());
+    }
+    else {
+        std::cerr << "Unsupported file extension: ." << ext << std::endl;
+        return;
+    }
+
+    if (success) {
+        std::cout << "Saved image to " << fileName << std::endl;
+    } else {
+        std::cerr << "Failed to save image: " << fileName << std::endl;
+    }
+}
+
+RGBPixel CalculateAverageColor(const std::vector<RGBPixel> &image, int x, int y, int width, int height, int imageWidth) {
     uint32_t r = 0, g = 0, b = 0;
     for (int i = y; i < y + height; i++)
     {
@@ -72,55 +98,14 @@ RGBPixel CalculateAverageColor(const vector<RGBPixel> &image, int x, int y, int 
     return RGBPixel((u_int8_t)(r / totalPixel), (u_int8_t)(g / totalPixel), (u_int8_t)(b / totalPixel));
 }
 
-void SaveImage(const string &fileName, const vector<RGBPixel> &image, int width, int height)
-{
-    struct jpeg_compress_struct cinfo;
-    struct jpeg_error_mgr jerr;
-    FILE *file = fopen(fileName.c_str(), "wb");
-
-    if (!file)
-    {
-        throw ImageLoadException("Cannot open file: " + fileName);
-    }
-
-    cinfo.err = jpeg_std_error(&jerr);
-    jpeg_create_compress(&cinfo);
-    jpeg_stdio_dest(&cinfo, file);
-
-    cinfo.image_width = width;
-    cinfo.image_height = height;
-    cinfo.input_components = 3;
-    cinfo.in_color_space = JCS_RGB;
-
-    jpeg_set_defaults(&cinfo);
-    jpeg_start_compress(&cinfo, TRUE);
-
-    JSAMPROW row = new unsigned char[width * 3];
-    while (cinfo.next_scanline < cinfo.image_height)
-    {
-        for (int x = 0; x < width; x++)
-        {
-            int idx = cinfo.next_scanline * width + x;
-            row[x * 3] = image[idx].r;
-            row[x * 3 + 1] = image[idx].g;
-            row[x * 3 + 2] = image[idx].b;
-        }
-        jpeg_write_scanlines(&cinfo, &row, 1);
-    }
-
-    delete[] row;
-    jpeg_finish_compress(&cinfo);
-    fclose(file);
-}
-
-unique_ptr<QuadTreeNode> BuildQuadTree(vector<RGBPixel> &image, int x, int y, int w, int h, double threshold, int minBlockSize, int errorMeasurementChoice, int imageWidth)
-{
+std::unique_ptr<QuadTreeNode> BuildQuadTree(std::vector<RGBPixel> &image, int x, int y, int w, int h, double threshold, int minBlockSize, int errorMeasurementChoice, int &imageWidth) {
     RGBPixel avgColor = CalculateAverageColor(image, x, y, w, h, imageWidth);
     double error;
 
     switch (errorMeasurementChoice)
     {
     case 1:
+        // Variance
         error = CalculateVariance(image, x, y, w, h, avgColor, imageWidth);
         break;
     case 2:
@@ -146,7 +131,7 @@ unique_ptr<QuadTreeNode> BuildQuadTree(vector<RGBPixel> &image, int x, int y, in
 
     if (error < threshold || (w * h) < minBlockSize)
     {
-        return make_unique<QuadTreeNode>(x, y, w, h, avgColor, true);
+        return std::make_unique<QuadTreeNode>(x, y, w, h, avgColor, true);
     }
 
     int halfWidth = w / 2;
@@ -154,7 +139,7 @@ unique_ptr<QuadTreeNode> BuildQuadTree(vector<RGBPixel> &image, int x, int y, in
     int halfHeight = h / 2;
     int remHeight = h - halfHeight;
 
-    auto node = make_unique<QuadTreeNode>(x, y, w, h, avgColor, false);
+    auto node = std::make_unique<QuadTreeNode>(x, y, w, h, avgColor, false);
     node->atasKiri = BuildQuadTree(image, x, y, halfWidth, halfHeight, threshold, minBlockSize, errorMeasurementChoice, imageWidth);
     node->atasKanan = BuildQuadTree(image, x + halfWidth, y, remWidth, halfHeight, threshold, minBlockSize, errorMeasurementChoice, imageWidth);
     node->bawahKiri = BuildQuadTree(image, x, y + halfHeight, halfWidth, remHeight, threshold, minBlockSize, errorMeasurementChoice, imageWidth);
@@ -162,8 +147,7 @@ unique_ptr<QuadTreeNode> BuildQuadTree(vector<RGBPixel> &image, int x, int y, in
     return node;
 }
 
-void reconstructImage(vector<RGBPixel> &outputImage, unique_ptr<QuadTreeNode> &node, int imageWidth)
-{
+void reconstructImage(std::vector<RGBPixel> &outputImage, std::unique_ptr<QuadTreeNode> &node, int imageWidth) {
     if (!node)
     {
         throw ImageLoadException("Node is null");
@@ -176,7 +160,7 @@ void reconstructImage(vector<RGBPixel> &outputImage, unique_ptr<QuadTreeNode> &n
             for (int j = 0; j < node->width; j++)
             {
                 int idx = (node->y + i) * imageWidth + (node->x + j);
-                outputImage[idx] = node->color; // Node Image pada Leaf hanya diambil average nya saja
+                outputImage[idx] = node->color;
             }
         }
         return;
@@ -188,25 +172,18 @@ void reconstructImage(vector<RGBPixel> &outputImage, unique_ptr<QuadTreeNode> &n
     reconstructImage(outputImage, node->bawahKanan, imageWidth);
 }
 
-int main()
-{
-    try
-    {
+int main(int argc, char* argv[]) {
+    try {
         int width, height;
-        vector<RGBPixel> image = LoadImage("misteri.jpeg", width, height);
-        auto root = BuildQuadTree(image, 0, 0, width, height, 0.5, 90, 5, width);
-        vector<RGBPixel> outputImage(width * height);
+        std::vector<RGBPixel> image = LoadImage("test/misteri.jpeg", width, height);
+        auto root = BuildQuadTree(image, 0, 0, width, height, 0.1, 50, 5, width);
+        std::vector<RGBPixel> outputImage(width * height);
         reconstructImage(outputImage, root, width);
-        SaveImage("misteri_hasil.jpeg", outputImage, width, height);
+        SaveImage("test/hasil_misteri.jpeg", outputImage, width, height);
     }
-    catch (const ImageLoadException &e)
-    {
-        cerr << "Error: " << e.what() << endl;
+    catch (const ImageLoadException &e) {
+        std::cerr << "Error: " << e.what() << std::endl;
     }
 
     return 0;
 }
-
-// run sementara masih manual
-//  g++ -o bin/run src/QuadTree.cpp src/Metrics.cpp src/ImageProcessing.cpp -ljpeg
-//  ./bin/run

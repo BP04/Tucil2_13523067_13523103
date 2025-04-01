@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/prog.dir/src/ImageProcessing.cpp.o CMakeFiles/prog.dir/src/Metrics.cpp.o CMakeFiles/prog.dir/src/QuadTree.cpp.o -o ../bin/prog 

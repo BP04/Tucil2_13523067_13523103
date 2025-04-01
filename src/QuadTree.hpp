@@ -7,8 +7,6 @@
 #include <memory>
 #include <stdexcept>
 
-using namespace std;
-
 struct RGBPixel
 {
     uint8_t r, g, b;
@@ -23,15 +21,9 @@ public:
     int width, height;
     RGBPixel color;
     bool isLeaf;
-    unique_ptr<QuadTreeNode> atasKiri, atasKanan, bawahKiri, bawahKanan;
+    std::unique_ptr<QuadTreeNode> atasKiri, atasKanan, bawahKiri, bawahKanan;
 
     QuadTreeNode(int x, int y, int width, int height, RGBPixel color, bool isLeaf);
 };
 
-class ImageLoadException : public std::runtime_error
-{
-public:
-    explicit ImageLoadException(const std::string &msg)
-        : std::runtime_error(msg) {}
-};
 #endif
