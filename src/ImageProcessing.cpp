@@ -72,22 +72,6 @@ RGBPixel CalculateAverageColor(const vector<RGBPixel> &image, int x, int y, int 
     return RGBPixel((u_int8_t)(r / totalPixel), (u_int8_t)(g / totalPixel), (u_int8_t)(b / totalPixel));
 }
 
-double CalculateVariance(const vector<RGBPixel> &image, int x, int y, int width, int height, const RGBPixel &avgColor, int imageWidth)
-{
-    double variance = 0.0;
-    for (int i = y; i < y + height; i++)
-    {
-        for (int j = x; j < x + width; j++)
-        {
-            int idx = i * imageWidth + j;
-            variance += pow(image[idx].r - avgColor.r, 2) +
-                        pow(image[idx].g - avgColor.g, 2) +
-                        pow(image[idx].b - avgColor.b, 2);
-        }
-    }
-    return variance / (3 * width * height);
-}
-
 void SaveImage(const string &fileName, const vector<RGBPixel> &image, int width, int height)
 {
     struct jpeg_compress_struct cinfo;
@@ -141,17 +125,21 @@ unique_ptr<QuadTreeNode> BuildQuadTree(vector<RGBPixel> &image, int x, int y, in
         break;
     case 2:
         // Mean Absolute Deviation (MAD)
+        error = CalculateMeanAbsoluteDeviation(image, x, y, w, h, avgColor, imageWidth);
         break;
     case 3:
         // Max Pixel Difference
+        error = CalculateMaxPixelDifference(image, x, y, w, h, avgColor, imageWidth);
         break;
 
     case 4:
         // Entropy
+        error = CalculateEntropy(image, x, y, w, h, avgColor, imageWidth);
         break;
 
     case 5:
         // SSIM
+        error = CalculateSSIM(image, x, y, w, h, avgColor, imageWidth);
         break;
     }
 

@@ -16,7 +16,7 @@ double CalculateVariance(const vector<RGBPixel> &image, int x, int y, int width,
     return variance / (3 * width * height);
 }
 
-double MeanAbsoluteDeviation(const vector<RGBPixel> &image, int x, int y, int width, int height, const RGBPixel &avgColor, int imageWidth)
+double CalculateMeanAbsoluteDeviation(const vector<RGBPixel> &image, int x, int y, int width, int height, const RGBPixel &avgColor, int imageWidth)
 {
     double mad = 0.0;
     for (int i = y; i < y + height; i++)
@@ -32,7 +32,7 @@ double MeanAbsoluteDeviation(const vector<RGBPixel> &image, int x, int y, int wi
     return mad / (3 * width * height);
 }
 
-double MaxPixelDifference(const vector<RGBPixel> &image, int x, int y, int width, int height, const RGBPixel &avgColor, int imageWidth)
+double CalculateMaxPixelDifference(const vector<RGBPixel> &image, int x, int y, int width, int height, const RGBPixel &avgColor, int imageWidth)
 {
 
     double minR = 255, maxR = 0;
@@ -46,21 +46,21 @@ double MaxPixelDifference(const vector<RGBPixel> &image, int x, int y, int width
             int idx = i * imageWidth + j;
 
             // Update min & max R
-            if (pix.r < minR)
+            if (image[idx].r < minR)
                 minR = image[idx].r;
-            if (pix.r > maxR)
+            if (image[idx].r > maxR)
                 maxR = image[idx].r;
 
             // Update min & max G
-            if (pix.g < minG)
+            if (image[idx].g < minG)
                 minG = image[idx].g;
-            if (pix.g > maxG)
+            if (image[idx].g > maxG)
                 maxG = image[idx].g;
 
             // Update min & max B
-            if (pix.b < minB)
+            if (image[idx].b < minB)
                 minB = image[idx].b;
-            if (pix.b > maxB)
+            if (image[idx].b > maxB)
                 maxB = image[idx].b;
         }
     }
@@ -74,9 +74,45 @@ double MaxPixelDifference(const vector<RGBPixel> &image, int x, int y, int width
 
 double CalculateEntropy(const vector<RGBPixel> &image, int x, int y, int width, int height, const RGBPixel &avgColor, int imageWidth)
 {
-    return 0.0;
+    // hitung frekuensi pixel
+    vector<double> freqR(256, 0), freqG(256, 0), freqB(256, 0);
+    for (int i = y; i < y + height; i++)
+    {
+        for (int j = x; j < x + width; j++)
+        {
+            int idx = i * imageWidth + j;
+            freqR[image[idx].r]++;
+            freqG[image[idx].g]++;
+            freqB[image[idx].b]++;
+        }
+    }
+    // hitung probabilitas pixel
+    int totalPixels = width * height;
+    double H = 0.0;
+    for (int i = 0; i < 256; i++)
+    {
+        if (freqR[i] > 0)
+        {
+            double p = freqR[i] / totalPixels;
+            H -= p * log2(p);
+        }
+        if (freqG[i] > 0)
+        {
+            double p = freqG[i] / totalPixels;
+            H -= p * log2(p);
+        }
+        if (freqB[i] > 0)
+        {
+            double p = freqB[i] / totalPixels;
+            H -= p * log2(p);
+        }
+    }
+
+    return H / 3.0;
 }
+
 double CalculateSSIM(const vector<RGBPixel> &image, int x, int y, int width, int height, const RGBPixel &avgColor, int imageWidth)
 {
+    
     return 0.0;
 }
