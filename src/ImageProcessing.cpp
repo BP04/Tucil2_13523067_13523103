@@ -7,6 +7,9 @@
 #include <fstream>
 #include <string>
 
+int depth;
+int numLeafs;
+
 vector<RGBPixel> LoadImage(const string &fileName, int &width, int &height)
 {
     struct jpeg_decompress_struct cinfo;
@@ -206,13 +209,39 @@ double CalculateCompressionRatio(const string &uncompressedFile, const string &c
     return (1 - (compressedSize / uncompressedSize)) * 100.0;
 }
 
+void TraverseTree(unique_ptr<QuadTreeNode> &node, int localdepth)
+{
+    if (!node)
+    {
+        throw ImageLoadException("Node is null");
+    }
+
+    if (localdepth > depth)
+    {
+        depth = localdepth;
+    }
+
+    if (node->isLeaf)
+    {
+        numLeafs++;
+        return;
+    }
+
+    TraverseTree(node->atasKiri, localdepth + 1);
+    TraverseTree(node->atasKanan, localdepth + 1);
+    TraverseTree(node->bawahKiri, localdepth + 1);
+    TraverseTree(node->bawahKanan, localdepth + 1);
+}
+
 int main()
 {
     try
     {
+        depth = 0, numLeafs = 0;
         int width, height;
         vector<RGBPixel> image = LoadImage("misteri.jpeg", width, height);
         auto root = BuildQuadTree(image, 0, 0, width, height, 0.5, 100, 5, width);
+        TraverseTree(root, 0);
         vector<RGBPixel> outputImage(width * height);
 
         reconstructImage(outputImage, root, width);
@@ -220,6 +249,8 @@ int main()
 
         double compressionRatio = CalculateCompressionRatio("misteri.jpeg", "misteri_hasil.jpeg");
         cout << "Compression Ratio: " << compressionRatio << "%" << endl;
+        cout << "Max Depth: " << depth << endl;
+        cout << "Number of Leafs: " << numLeafs << endl;
     }
     catch (const ImageLoadException &e)
     {
