@@ -7,9 +7,6 @@
 #include <fstream>
 #include <string>
 
-int depth;
-int numLeafs;
-
 vector<RGBPixel> LoadImage(const string &fileName, int &width, int &height)
 {
     struct jpeg_decompress_struct cinfo;
@@ -209,16 +206,16 @@ double CalculateCompressionRatio(const string &uncompressedFile, const string &c
     return (1 - (compressedSize / uncompressedSize)) * 100.0;
 }
 
-void TraverseTree(unique_ptr<QuadTreeNode> &node, int localdepth)
+void TraverseTree(unique_ptr<QuadTreeNode> &node, int currdepth, int &maxDepth, int &numLeafs)
 {
     if (!node)
     {
         throw ImageLoadException("Node is null");
     }
 
-    if (localdepth > depth)
+    if (currdepth > maxDepth)
     {
-        depth = localdepth;
+        maxDepth = currdepth;
     }
 
     if (node->isLeaf)
@@ -227,21 +224,21 @@ void TraverseTree(unique_ptr<QuadTreeNode> &node, int localdepth)
         return;
     }
 
-    TraverseTree(node->atasKiri, localdepth + 1);
-    TraverseTree(node->atasKanan, localdepth + 1);
-    TraverseTree(node->bawahKiri, localdepth + 1);
-    TraverseTree(node->bawahKanan, localdepth + 1);
+    TraverseTree(node->atasKiri, currdepth + 1, maxDepth, numLeafs);
+    TraverseTree(node->atasKanan, currdepth + 1, maxDepth, numLeafs);
+    TraverseTree(node->bawahKiri, currdepth + 1, maxDepth, numLeafs);
+    TraverseTree(node->bawahKanan, currdepth + 1, maxDepth, numLeafs);
 }
 
 int main()
 {
     try
     {
-        depth = 0, numLeafs = 0;
+        int maxDepth = 0, numLeafs = 0;
         int width, height;
         vector<RGBPixel> image = LoadImage("misteri.jpeg", width, height);
         auto root = BuildQuadTree(image, 0, 0, width, height, 0.5, 100, 5, width);
-        TraverseTree(root, 0);
+        TraverseTree(root, 0, maxDepth, numLeafs);
         vector<RGBPixel> outputImage(width * height);
 
         reconstructImage(outputImage, root, width);
@@ -249,7 +246,7 @@ int main()
 
         double compressionRatio = CalculateCompressionRatio("misteri.jpeg", "misteri_hasil.jpeg");
         cout << "Compression Ratio: " << compressionRatio << "%" << endl;
-        cout << "Max Depth: " << depth << endl;
+        cout << "Max Depth: " << maxDepth << endl;
         cout << "Number of Leafs: " << numLeafs << endl;
     }
     catch (const ImageLoadException &e)
