@@ -184,27 +184,34 @@ double CalculateCompressionRatio(const std::string &uncompressedFile, const std:
     return (1 - (compressedSize / uncompressedSize)) * 100.0;
 }
 
-void TraverseTree(std::unique_ptr<QuadTreeNode> &node, int currdepth, int &maxDepth, int &numLeafs) {
-    if (!node)
-    {
-        throw ImageLoadException("Node is null");
+int GetMaxDepth(std::unique_ptr<QuadTreeNode> &node) {
+    if (!node) {
+        return 0;
     }
 
-    if (currdepth > maxDepth)
-    {
-        maxDepth = currdepth;
+    if (node->isLeaf) {
+        return 1;
     }
 
-    if (node->isLeaf)
-    {
-        numLeafs++;
-        return;
+    return std::max({GetMaxDepth(node->atasKiri),
+                     GetMaxDepth(node->atasKiri),
+                     GetMaxDepth(node->bawahKiri),
+                     GetMaxDepth(node->bawahKanan)}) + 1;
+}
+
+int GetNodeCount(std::unique_ptr<QuadTreeNode> &node) {
+    if (!node) {
+        return 0;
     }
 
-    TraverseTree(node->atasKiri, currdepth + 1, maxDepth, numLeafs);
-    TraverseTree(node->atasKanan, currdepth + 1, maxDepth, numLeafs);
-    TraverseTree(node->bawahKiri, currdepth + 1, maxDepth, numLeafs);
-    TraverseTree(node->bawahKanan, currdepth + 1, maxDepth, numLeafs);
+    if (node->isLeaf) {
+        return 1;
+    }
+
+    return GetNodeCount(node->atasKiri) +
+           GetNodeCount(node->atasKanan) +
+           GetNodeCount(node->bawahKiri) +
+           GetNodeCount(node->bawahKanan) + 1;
 }
 
 int main()
@@ -216,16 +223,20 @@ int main()
 
         std::vector<RGBPixel> image = LoadImage("test/saiba.jpeg", width, height);
         auto root = BuildQuadTree(image, 0, 0, width, height, 10, 100, 3, width);
-        TraverseTree(root, 0, maxDepth, numLeafs);
+        
         std::vector<RGBPixel> outputImage(width * height);
-
         reconstructImage(outputImage, root, width);
+        
         SaveImage("saiba_hasil.jpeg", outputImage, width, height);
 
         double compressionRatio = CalculateCompressionRatio("saiba.jpeg", "saiba_hasil.jpeg");
         std::cout << "Compression Ratio: " << compressionRatio << "%" << std::endl;
+        
+        int maxDepth = GetMaxDepth(root);
         std::cout << "Max Depth: " << maxDepth << std::endl;
-        std::cout << "Number of Leafs: " << numLeafs << std::endl;
+        
+        int nodeCount = GetNodeCount(root);
+        std::cout << "Number of Nodes: " << nodeCount << std::endl;
     }
     catch (const ImageLoadException &e) {
         std::cerr << "Error: " << e.what() << std::endl;
