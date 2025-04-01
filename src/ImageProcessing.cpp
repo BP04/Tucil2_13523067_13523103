@@ -208,5 +208,5 @@ int main()
 }
 
 // run sementara masih manual
-//  g++ -o bin/run src/QuadTree.cpp src/ImageProcessing.cpp -ljpeg
+//  g++ -o bin/run src/QuadTree.cpp src/Metrics.cpp src/ImageProcessing.cpp -ljpeg
 //  ./bin/run
