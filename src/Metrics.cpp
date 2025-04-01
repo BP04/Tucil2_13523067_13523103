@@ -74,7 +74,7 @@ double CalculateMaxPixelDifference(const vector<RGBPixel> &image, int x, int y, 
 
 double CalculateEntropy(const vector<RGBPixel> &image, int x, int y, int width, int height, const RGBPixel &avgColor, int imageWidth)
 {
-    // hitung frekuensi pixel
+    // hitung frekuensi tiap pixel
     vector<double> freqR(256, 0), freqG(256, 0), freqB(256, 0);
     for (int i = y; i < y + height; i++)
     {
@@ -86,7 +86,7 @@ double CalculateEntropy(const vector<RGBPixel> &image, int x, int y, int width, 
             freqB[image[idx].b]++;
         }
     }
-    // hitung probabilitas pixel
+    // hitung probabilitas tiap pixel
     int totalPixels = width * height;
     double H = 0.0;
     for (int i = 0; i < 256; i++)
@@ -113,6 +113,57 @@ double CalculateEntropy(const vector<RGBPixel> &image, int x, int y, int width, 
 
 double CalculateSSIM(const vector<RGBPixel> &image, int x, int y, int width, int height, const RGBPixel &avgColor, int imageWidth)
 {
-    
-    return 0.0;
+    int totalPixels = width * height;
+    double sum1R = 0.0, sum1R2 = 0.0, sum12R = 0.0;
+    double sum1G = 0.0, sum1G2 = 0.0, sum12G = 0.0;
+    double sum1B = 0.0, sum1B2 = 0.0, sum12B = 0.0;
+
+    double mean2R = static_cast<double>(avgColor.r);
+    double mean2G = static_cast<double>(avgColor.g);
+    double mean2B = static_cast<double>(avgColor.b);
+
+    for (int i = y; i < y + height; i++)
+    {
+        for (int j = x; j < x + width; j++)
+        {
+            int idx = i * imageWidth + j;
+            double r1 = static_cast<double>(image[idx].r);
+            sum1R += r1;
+            sum1R2 += r1 * r1;
+            sum12R += r1 * mean2R;
+
+            double g1 = static_cast<double>(image[idx].g);
+            sum1G += g1;
+            sum1G2 += g1 * g1;
+            sum12G += g1 * mean2G;
+
+            double b1 = static_cast<double>(image[idx].b);
+            sum1B += b1;
+            sum1B2 += b1 * b1;
+            sum12B += b1 * mean2B;
+        }
+    }
+
+    double mean1R = sum1R / totalPixels;
+    double mean1G = sum1G / totalPixels;
+    double mean1B = sum1B / totalPixels;
+
+    double var1R = sum1R2 / totalPixels - mean1R * mean1R;
+    double var1G = sum1G2 / totalPixels - mean1G * mean1G;
+    double var1B = sum1B2 / totalPixels - mean1B * mean1B;
+
+    double covR = sum12R / totalPixels - mean1R * mean2R;
+    double covG = sum12G / totalPixels - mean1G * mean2G;
+    double covB = sum12B / totalPixels - mean1B * mean2B;
+
+    double L_val = 255.0;
+    double K1 = 0.01, K2 = 0.03;
+    double C1 = (K1 * L_val) * (K1 * L_val);
+    double C2 = (K2 * L_val) * (K2 * L_val);
+
+    double ssimR = (2 * mean1R * mean2R + C1) * (2 * covR + C2) / ((mean1R * mean1R + mean2R * mean2R + C1) * (var1R + C2));
+    double ssimG = (2 * mean1G * mean2G + C1) * (2 * covG + C2) / ((mean1G * mean1G + mean2G * mean2G + C1) * (var1G + C2));
+    double ssimB = (2 * mean1B * mean2B + C1) * (2 * covB + C2) / ((mean1B * mean1B + mean2B * mean2B + C1) * (var1B + C2));
+
+    return (ssimR + ssimG + ssimB) / 3.0;
 }

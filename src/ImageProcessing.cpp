@@ -139,7 +139,8 @@ unique_ptr<QuadTreeNode> BuildQuadTree(vector<RGBPixel> &image, int x, int y, in
 
     case 5:
         // SSIM
-        error = CalculateSSIM(image, x, y, w, h, avgColor, imageWidth);
+        double ssim = CalculateSSIM(image, x, y, w, h, avgColor, imageWidth);
+        error = 1.0 - ssim;
         break;
     }
 
