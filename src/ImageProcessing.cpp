@@ -194,7 +194,7 @@ int main()
     {
         int width, height;
         vector<RGBPixel> image = LoadImage("misteri.jpeg", width, height);
-        auto root = BuildQuadTree(image, 0, 0, width, height, 120, 90, 1, width);
+        auto root = BuildQuadTree(image, 0, 0, width, height, 0.5, 90, 5, width);
         vector<RGBPixel> outputImage(width * height);
         reconstructImage(outputImage, root, width);
         SaveImage("misteri_hasil.jpeg", outputImage, width, height);
