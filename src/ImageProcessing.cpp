@@ -67,12 +67,6 @@ void SaveImage(std::string fileName, const std::vector<RGBPixel> &image, int wid
         int quality = 100;
         success = stbi_write_jpg(fileName.c_str(), width, height, 3, rawData.data(), quality);
     }
-    else if (ext == "bmp") {
-        success = stbi_write_bmp(fileName.c_str(), width, height, 3, rawData.data());
-    }
-    else if (ext == "tga") {
-        success = stbi_write_tga(fileName.c_str(), width, height, 3, rawData.data());
-    }
     else {
         std::cerr << "Unsupported file extension: ." << ext << std::endl;
         return;
