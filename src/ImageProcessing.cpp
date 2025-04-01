@@ -1,6 +1,7 @@
 #include <iostream>
 #include "QuadTree.hpp"
 #include "Metrics.hpp"
+#include <sys/stat.h>
 #include <jpeglib.h>
 #include <jerror.h>
 #include <fstream>
@@ -110,6 +111,7 @@ void SaveImage(const string &fileName, const vector<RGBPixel> &image, int width,
 
     delete[] row;
     jpeg_finish_compress(&cinfo);
+    jpeg_destroy_compress(&cinfo);
     fclose(file);
 }
 
@@ -133,12 +135,12 @@ unique_ptr<QuadTreeNode> BuildQuadTree(vector<RGBPixel> &image, int x, int y, in
         break;
 
     case 4:
-        // Entropy
+        // Entropy (rentang 0-8)
         error = CalculateEntropy(image, x, y, w, h, avgColor, imageWidth);
         break;
 
     case 5:
-        // SSIM
+        // SSIM (rentang 0-1)
         double ssim = CalculateSSIM(image, x, y, w, h, avgColor, imageWidth);
         error = 1.0 - ssim;
         break;
@@ -188,16 +190,36 @@ void reconstructImage(vector<RGBPixel> &outputImage, unique_ptr<QuadTreeNode> &n
     reconstructImage(outputImage, node->bawahKanan, imageWidth);
 }
 
+double CalculateCompressionRatio(const string &uncompressedFile, const string &compressedFile)
+{
+    struct stat uncompressedStat, compressedStat;
+    if (stat(uncompressedFile.c_str(), &uncompressedStat) != 0 ||
+        stat(compressedFile.c_str(), &compressedStat) != 0)
+    {
+        throw ImageLoadException("Cannot get file size: " + uncompressedFile + " or " + compressedFile);
+    }
+
+    double uncompressedSize = uncompressedStat.st_size;
+    double compressedSize = compressedStat.st_size;
+    cout << "Uncompressed Size: " << uncompressedSize << " bytes" << endl;
+    cout << "Compressed Size: " << compressedSize << " bytes" << endl;
+    return (1 - (compressedSize / uncompressedSize)) * 100.0;
+}
+
 int main()
 {
     try
     {
         int width, height;
         vector<RGBPixel> image = LoadImage("misteri.jpeg", width, height);
-        auto root = BuildQuadTree(image, 0, 0, width, height, 0.5, 90, 5, width);
+        auto root = BuildQuadTree(image, 0, 0, width, height, 0.5, 100, 5, width);
         vector<RGBPixel> outputImage(width * height);
+
         reconstructImage(outputImage, root, width);
         SaveImage("misteri_hasil.jpeg", outputImage, width, height);
+
+        double compressionRatio = CalculateCompressionRatio("misteri.jpeg", "misteri_hasil.jpeg");
+        cout << "Compression Ratio: " << compressionRatio << "%" << endl;
     }
     catch (const ImageLoadException &e)
     {
