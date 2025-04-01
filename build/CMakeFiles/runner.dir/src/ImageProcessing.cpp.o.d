@@ -1,4 +1,4 @@
-CMakeFiles/prog.dir/src/ImageProcessing.cpp.o: \
+CMakeFiles/runner.dir/src/ImageProcessing.cpp.o: \
  /home/ben/stima/Tucil2_13523067_13523103/src/ImageProcessing.cpp \
  /usr/include/stdc-predef.h \
  /home/ben/stima/Tucil2_13523067_13523103/src/stb_image.h \

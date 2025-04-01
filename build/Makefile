@@ -117,24 +117,24 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named prog
+# Target rules for targets named runner
 
 # Build rule for target.
-prog: cmake_check_build_system
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 prog
-.PHONY : prog
+runner: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 runner
+.PHONY : runner
 
 # fast build rule for target.
-prog/fast:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/prog.dir/build.make CMakeFiles/prog.dir/build
-.PHONY : prog/fast
+runner/fast:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/build
+.PHONY : runner/fast
 
 src/ImageProcessing.o: src/ImageProcessing.cpp.o
 .PHONY : src/ImageProcessing.o
 
 # target to build an object file
 src/ImageProcessing.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/prog.dir/build.make CMakeFiles/prog.dir/src/ImageProcessing.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/src/ImageProcessing.cpp.o
 .PHONY : src/ImageProcessing.cpp.o
 
 src/ImageProcessing.i: src/ImageProcessing.cpp.i
@@ -142,7 +142,7 @@ src/ImageProcessing.i: src/ImageProcessing.cpp.i
 
 # target to preprocess a source file
 src/ImageProcessing.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/prog.dir/build.make CMakeFiles/prog.dir/src/ImageProcessing.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/src/ImageProcessing.cpp.i
 .PHONY : src/ImageProcessing.cpp.i
 
 src/ImageProcessing.s: src/ImageProcessing.cpp.s
@@ -150,7 +150,7 @@ src/ImageProcessing.s: src/ImageProcessing.cpp.s
 
 # target to generate assembly for a file
 src/ImageProcessing.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/prog.dir/build.make CMakeFiles/prog.dir/src/ImageProcessing.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/src/ImageProcessing.cpp.s
 .PHONY : src/ImageProcessing.cpp.s
 
 src/Metrics.o: src/Metrics.cpp.o
@@ -158,7 +158,7 @@ src/Metrics.o: src/Metrics.cpp.o
 
 # target to build an object file
 src/Metrics.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/prog.dir/build.make CMakeFiles/prog.dir/src/Metrics.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/src/Metrics.cpp.o
 .PHONY : src/Metrics.cpp.o
 
 src/Metrics.i: src/Metrics.cpp.i
@@ -166,7 +166,7 @@ src/Metrics.i: src/Metrics.cpp.i
 
 # target to preprocess a source file
 src/Metrics.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/prog.dir/build.make CMakeFiles/prog.dir/src/Metrics.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/src/Metrics.cpp.i
 .PHONY : src/Metrics.cpp.i
 
 src/Metrics.s: src/Metrics.cpp.s
@@ -174,7 +174,7 @@ src/Metrics.s: src/Metrics.cpp.s
 
 # target to generate assembly for a file
 src/Metrics.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/prog.dir/build.make CMakeFiles/prog.dir/src/Metrics.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/src/Metrics.cpp.s
 .PHONY : src/Metrics.cpp.s
 
 src/QuadTree.o: src/QuadTree.cpp.o
@@ -182,7 +182,7 @@ src/QuadTree.o: src/QuadTree.cpp.o
 
 # target to build an object file
 src/QuadTree.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/prog.dir/build.make CMakeFiles/prog.dir/src/QuadTree.cpp.o
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/src/QuadTree.cpp.o
 .PHONY : src/QuadTree.cpp.o
 
 src/QuadTree.i: src/QuadTree.cpp.i
@@ -190,7 +190,7 @@ src/QuadTree.i: src/QuadTree.cpp.i
 
 # target to preprocess a source file
 src/QuadTree.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/prog.dir/build.make CMakeFiles/prog.dir/src/QuadTree.cpp.i
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/src/QuadTree.cpp.i
 .PHONY : src/QuadTree.cpp.i
 
 src/QuadTree.s: src/QuadTree.cpp.s
@@ -198,7 +198,7 @@ src/QuadTree.s: src/QuadTree.cpp.s
 
 # target to generate assembly for a file
 src/QuadTree.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/prog.dir/build.make CMakeFiles/prog.dir/src/QuadTree.cpp.s
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/src/QuadTree.cpp.s
 .PHONY : src/QuadTree.cpp.s
 
 # Help Target
@@ -209,7 +209,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
-	@echo "... prog"
+	@echo "... runner"
 	@echo "... src/ImageProcessing.o"
 	@echo "... src/ImageProcessing.i"
 	@echo "... src/ImageProcessing.s"

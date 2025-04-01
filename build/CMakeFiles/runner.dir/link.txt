@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/runner.dir/src/ImageProcessing.cpp.o CMakeFiles/runner.dir/src/Metrics.cpp.o CMakeFiles/runner.dir/src/QuadTree.cpp.o -o ../bin/runner 

@@ -63,7 +63,7 @@ CMAKE_BINARY_DIR = /home/ben/stima/Tucil2_13523067_13523103/build
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: CMakeFiles/prog.dir/all
+all: CMakeFiles/runner.dir/all
 .PHONY : all
 
 # The main recursive "preinstall" target.
@@ -71,34 +71,34 @@ preinstall:
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: CMakeFiles/prog.dir/clean
+clean: CMakeFiles/runner.dir/clean
 .PHONY : clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/prog.dir
+# Target rules for target CMakeFiles/runner.dir
 
 # All Build rule for target.
-CMakeFiles/prog.dir/all:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/prog.dir/build.make CMakeFiles/prog.dir/depend
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/prog.dir/build.make CMakeFiles/prog.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/ben/stima/Tucil2_13523067_13523103/build/CMakeFiles --progress-num=1,2,3,4 "Built target prog"
-.PHONY : CMakeFiles/prog.dir/all
+CMakeFiles/runner.dir/all:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/depend
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/ben/stima/Tucil2_13523067_13523103/build/CMakeFiles --progress-num=1,2,3,4 "Built target runner"
+.PHONY : CMakeFiles/runner.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/prog.dir/rule: cmake_check_build_system
+CMakeFiles/runner.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/ben/stima/Tucil2_13523067_13523103/build/CMakeFiles 4
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/prog.dir/all
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 CMakeFiles/runner.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/ben/stima/Tucil2_13523067_13523103/build/CMakeFiles 0
-.PHONY : CMakeFiles/prog.dir/rule
+.PHONY : CMakeFiles/runner.dir/rule
 
 # Convenience name for target.
-prog: CMakeFiles/prog.dir/rule
-.PHONY : prog
+runner: CMakeFiles/runner.dir/rule
+.PHONY : runner
 
 # clean rule for target.
-CMakeFiles/prog.dir/clean:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/prog.dir/build.make CMakeFiles/prog.dir/clean
-.PHONY : CMakeFiles/prog.dir/clean
+CMakeFiles/runner.dir/clean:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/clean
+.PHONY : CMakeFiles/runner.dir/clean
 
 #=============================================================================
 # Special targets to cleanup operation of make.

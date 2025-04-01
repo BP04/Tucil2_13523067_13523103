@@ -1,4 +1,4 @@
-CMakeFiles/prog.dir/src/Metrics.cpp.o: \
+CMakeFiles/runner.dir/src/Metrics.cpp.o: \
  /home/ben/stima/Tucil2_13523067_13523103/src/Metrics.cpp \
  /usr/include/stdc-predef.h \
  /home/ben/stima/Tucil2_13523067_13523103/src/Metrics.hpp \

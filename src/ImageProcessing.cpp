@@ -41,7 +41,7 @@ std::vector<RGBPixel> LoadImage(std::string fileName, int &width, int &height) {
     return pixels;
 }
 
-void SaveImage(std::string fileName, const std::vector<RGBPixel> &image, int width, int height) {
+void SaveImage(std::string fileName, const std::vector<RGBPixel> &image, int &width, int &height) {
     std::vector<uint8_t> rawData;
     rawData.reserve(width * height * 3);
 
@@ -79,7 +79,7 @@ void SaveImage(std::string fileName, const std::vector<RGBPixel> &image, int wid
     }
 }
 
-RGBPixel CalculateAverageColor(const std::vector<RGBPixel> &image, int x, int y, int width, int height, int imageWidth) {
+RGBPixel CalculateAverageColor(const std::vector<RGBPixel> &image, int x, int y, int width, int height, int &imageWidth) {
     uint32_t r = 0, g = 0, b = 0;
     for (int i = y; i < y + height; i++)
     {
@@ -95,7 +95,7 @@ RGBPixel CalculateAverageColor(const std::vector<RGBPixel> &image, int x, int y,
     return RGBPixel((u_int8_t)(r / totalPixel), (u_int8_t)(g / totalPixel), (u_int8_t)(b / totalPixel));
 }
 
-std::unique_ptr<QuadTreeNode> BuildQuadTree(std::vector<RGBPixel> &image, int x, int y, int w, int h, double threshold, int minBlockSize, int errorMeasurementChoice, int imageWidth) {
+std::unique_ptr<QuadTreeNode> BuildQuadTree(std::vector<RGBPixel> &image, int x, int y, int w, int h, double &threshold, int &minBlockSize, int &errorMeasurementChoice, int &imageWidth) {
     RGBPixel avgColor = CalculateAverageColor(image, x, y, w, h, imageWidth);
     double error;
 
@@ -144,7 +144,7 @@ std::unique_ptr<QuadTreeNode> BuildQuadTree(std::vector<RGBPixel> &image, int x,
     return node;
 }
 
-void reconstructImage(std::vector<RGBPixel> &outputImage, std::unique_ptr<QuadTreeNode> &node, int imageWidth) {
+void reconstructImage(std::vector<RGBPixel> &outputImage, std::unique_ptr<QuadTreeNode> &node, int &imageWidth) {
     if (!node)
     {
         throw ImageLoadException("Node is null");
@@ -171,9 +171,7 @@ void reconstructImage(std::vector<RGBPixel> &outputImage, std::unique_ptr<QuadTr
 
 double CalculateCompressionRatio(const std::string &uncompressedFile, const std::string &compressedFile) {
     struct stat uncompressedStat, compressedStat;
-    if (stat(uncompressedFile.c_str(), &uncompressedStat) != 0 ||
-        stat(compressedFile.c_str(), &compressedStat) != 0)
-    {
+    if (stat(uncompressedFile.c_str(), &uncompressedStat) != 0 || stat(compressedFile.c_str(), &compressedStat) != 0) {
         throw ImageLoadException("Cannot get file size: " + uncompressedFile + " or " + compressedFile);
     }
 
@@ -214,22 +212,55 @@ int GetNodeCount(std::unique_ptr<QuadTreeNode> &node) {
            GetNodeCount(node->bawahKanan) + 1;
 }
 
-int main()
-{
-    try
-    {
-        int maxDepth = 0, numLeafs = 0;
+int main() {
+    try {
         int width, height;
 
-        std::vector<RGBPixel> image = LoadImage("test/saiba.jpeg", width, height);
-        auto root = BuildQuadTree(image, 0, 0, width, height, 10, 100, 3, width);
+        std::string originalImagePath;
+        std::string compressedImagePath;
+        std::string gifOutputPath;
+        int errorMeasurementChoice;
+        double threshold;
+        int minBlockSize;
+        double targetCompressionRatio;
+
+        std::cout << "Masukkan path ke gambar input (contoh: test/a.jpg): ";
+        std::getline(std::cin, originalImagePath);
+
+        std::cout << "Pilih metode perhitungan error:\n";
+        std::cout << "1. Variansi\n";
+        std::cout << "2. Rata-rata Deviasi Absolut (MAD)\n";
+        std::cout << "3. Selisih Piksel Maksimum\n";
+        std::cout << "4. Entropi\n";
+        std::cout << "5. SSIM (Structural Similarity Index) [Bonus]\n";
+        std::cout << "Masukkan nomor metode (1-5): ";
+        std::cin >> errorMeasurementChoice;
+
+        std::cout << "Masukkan nilai threshold: ";
+        std::cin >> threshold;
+
+        std::cout << "Masukkan ukuran blok minimum: ";
+        std::cin >> minBlockSize;
+
+        std::cout << "Masukkan target rasio kompresi (0 untuk dinonaktifkan, 1.0 untuk 100%): ";
+        std::cin >> targetCompressionRatio;
+        std::cin.ignore();
+
+        std::cout << "Masukkan path untuk menyimpan gambar hasil kompresi (contoh: test/b.jpg): ";
+        std::getline(std::cin, compressedImagePath);
+
+        std::cout << "Masukkan path untuk menyimpan GIF (contoh: test/process): ";
+        std::getline(std::cin, gifOutputPath);
+
+        std::vector<RGBPixel> image = LoadImage(originalImagePath, width, height);
+        auto root = BuildQuadTree(image, 0, 0, width, height, threshold, minBlockSize, errorMeasurementChoice, width);
         
         std::vector<RGBPixel> outputImage(width * height);
         reconstructImage(outputImage, root, width);
-        
-        SaveImage("saiba_hasil.jpeg", outputImage, width, height);
 
-        double compressionRatio = CalculateCompressionRatio("saiba.jpeg", "saiba_hasil.jpeg");
+        SaveImage(compressedImagePath, outputImage, width, height);
+
+        double compressionRatio = CalculateCompressionRatio(originalImagePath, compressedImagePath);
         std::cout << "Compression Ratio: " << compressionRatio << "%" << std::endl;
         
         int maxDepth = GetMaxDepth(root);

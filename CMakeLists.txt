@@ -13,4 +13,4 @@ set(SOURCES
     src/QuadTree.cpp
 )
 
-add_executable(prog ${SOURCES})
+add_executable(runner ${SOURCES})
