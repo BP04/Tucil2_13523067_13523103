@@ -2,6 +2,7 @@
 #include "QuadTree.hpp"
 #include "Metrics.hpp"
 #include <sys/stat.h>
+#include <chrono>
 #include <jpeglib.h>
 #include <jerror.h>
 #include <fstream>
@@ -236,15 +237,16 @@ int main()
     {
         int maxDepth = 0, numLeafs = 0;
         int width, height;
-        vector<RGBPixel> image = LoadImage("misteri.jpeg", width, height);
-        auto root = BuildQuadTree(image, 0, 0, width, height, 0.5, 100, 5, width);
+
+        vector<RGBPixel> image = LoadImage("saiba.jpeg", width, height);
+        auto root = BuildQuadTree(image, 0, 0, width, height, 10, 100, 3, width);
         TraverseTree(root, 0, maxDepth, numLeafs);
         vector<RGBPixel> outputImage(width * height);
 
         reconstructImage(outputImage, root, width);
-        SaveImage("misteri_hasil.jpeg", outputImage, width, height);
+        SaveImage("saiba_hasil.jpeg", outputImage, width, height);
 
-        double compressionRatio = CalculateCompressionRatio("misteri.jpeg", "misteri_hasil.jpeg");
+        double compressionRatio = CalculateCompressionRatio("saiba.jpeg", "saiba_hasil.jpeg");
         cout << "Compression Ratio: " << compressionRatio << "%" << endl;
         cout << "Max Depth: " << maxDepth << endl;
         cout << "Number of Leafs: " << numLeafs << endl;
