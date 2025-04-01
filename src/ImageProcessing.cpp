@@ -9,6 +9,9 @@
 #include "ImageLoadException.hpp"
 
 #include <iostream>
+#include <sys/stat.h>
+#include <chrono>
+#include <jpeglib.h>
 #include <jerror.h>
 #include <fstream>
 #include <string>
@@ -98,7 +101,7 @@ RGBPixel CalculateAverageColor(const std::vector<RGBPixel> &image, int x, int y,
     return RGBPixel((u_int8_t)(r / totalPixel), (u_int8_t)(g / totalPixel), (u_int8_t)(b / totalPixel));
 }
 
-std::unique_ptr<QuadTreeNode> BuildQuadTree(std::vector<RGBPixel> &image, int x, int y, int w, int h, double threshold, int minBlockSize, int errorMeasurementChoice, int &imageWidth) {
+std::unique_ptr<QuadTreeNode> BuildQuadTree(std::vector<RGBPixel> &image, int x, int y, int w, int h, double threshold, int minBlockSize, int errorMeasurementChoice, int imageWidth) {
     RGBPixel avgColor = CalculateAverageColor(image, x, y, w, h, imageWidth);
     double error;
 
@@ -118,12 +121,12 @@ std::unique_ptr<QuadTreeNode> BuildQuadTree(std::vector<RGBPixel> &image, int x,
         break;
 
     case 4:
-        // Entropy
+        // Entropy (rentang 0-8)
         error = CalculateEntropy(image, x, y, w, h, avgColor, imageWidth);
         break;
 
     case 5:
-        // SSIM
+        // SSIM (rentang 0-1)
         double ssim = CalculateSSIM(image, x, y, w, h, avgColor, imageWidth);
         error = 1.0 - ssim;
         break;
@@ -172,14 +175,63 @@ void reconstructImage(std::vector<RGBPixel> &outputImage, std::unique_ptr<QuadTr
     reconstructImage(outputImage, node->bawahKanan, imageWidth);
 }
 
-int main(int argc, char* argv[]) {
-    try {
+double CalculateCompressionRatio(const std::string &uncompressedFile, const std::string &compressedFile) {
+    struct stat uncompressedStat, compressedStat;
+    if (stat(uncompressedFile.c_str(), &uncompressedStat) != 0 ||
+        stat(compressedFile.c_str(), &compressedStat) != 0)
+    {
+        throw ImageLoadException("Cannot get file size: " + uncompressedFile + " or " + compressedFile);
+    }
+
+    double uncompressedSize = uncompressedStat.st_size;
+    double compressedSize = compressedStat.st_size;
+    std::cout << "Uncompressed Size: " << uncompressedSize << " bytes" << std::endl;
+    std::cout << "Compressed Size: " << compressedSize << " bytes" << std::endl;
+    return (1 - (compressedSize / uncompressedSize)) * 100.0;
+}
+
+void TraverseTree(std::unique_ptr<QuadTreeNode> &node, int currdepth, int &maxDepth, int &numLeafs) {
+    if (!node)
+    {
+        throw ImageLoadException("Node is null");
+    }
+
+    if (currdepth > maxDepth)
+    {
+        maxDepth = currdepth;
+    }
+
+    if (node->isLeaf)
+    {
+        numLeafs++;
+        return;
+    }
+
+    TraverseTree(node->atasKiri, currdepth + 1, maxDepth, numLeafs);
+    TraverseTree(node->atasKanan, currdepth + 1, maxDepth, numLeafs);
+    TraverseTree(node->bawahKiri, currdepth + 1, maxDepth, numLeafs);
+    TraverseTree(node->bawahKanan, currdepth + 1, maxDepth, numLeafs);
+}
+
+int main()
+{
+    try
+    {
+        int maxDepth = 0, numLeafs = 0;
         int width, height;
-        std::vector<RGBPixel> image = LoadImage("test/misteri.jpeg", width, height);
-        auto root = BuildQuadTree(image, 0, 0, width, height, 0.1, 50, 5, width);
+
+        std::vector<RGBPixel> image = LoadImage("test/saiba.jpeg", width, height);
+        auto root = BuildQuadTree(image, 0, 0, width, height, 10, 100, 3, width);
+        TraverseTree(root, 0, maxDepth, numLeafs);
         std::vector<RGBPixel> outputImage(width * height);
+
         reconstructImage(outputImage, root, width);
-        SaveImage("test/hasil_misteri.jpeg", outputImage, width, height);
+        SaveImage("saiba_hasil.jpeg", outputImage, width, height);
+
+        double compressionRatio = CalculateCompressionRatio("saiba.jpeg", "saiba_hasil.jpeg");
+        std::cout << "Compression Ratio: " << compressionRatio << "%" << std::endl;
+        std::cout << "Max Depth: " << maxDepth << std::endl;
+        std::cout << "Number of Leafs: " << numLeafs << std::endl;
     }
     catch (const ImageLoadException &e) {
         std::cerr << "Error: " << e.what() << std::endl;
