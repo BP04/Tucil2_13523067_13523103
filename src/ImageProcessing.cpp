@@ -44,7 +44,7 @@ std::vector<RGBPixel> LoadImage(std::string fileName, int &width, int &height) {
     return pixels;
 }
 
-void SaveImage(std::string fileName, const std::vector<RGBPixel> &image, int &width, int &height) {
+void SaveImage(std::string fileName, const std::vector<RGBPixel> &image, int &width, int &height, bool show) {
     std::vector<uint8_t> rawData;
     rawData.reserve(width * height * 3);
 
@@ -75,10 +75,12 @@ void SaveImage(std::string fileName, const std::vector<RGBPixel> &image, int &wi
         return;
     }
 
-    if (success) {
-        std::cout << "Gambar berhasil disimpan di " << fileName << std::endl;
-    } else {
-        std::cerr << "Gambar tidak berhasil disimpan" << std::endl;
+    if(show) {
+        if (success) {
+            std::cout << "Gambar berhasil disimpan di " << fileName << std::endl;
+        } else {
+            std::cerr << "Gambar tidak berhasil disimpan" << std::endl;
+        }
     }
 }
 
@@ -98,7 +100,7 @@ RGBPixel CalculateAverageColor(const std::vector<RGBPixel> &image, int x, int y,
     return RGBPixel((u_int8_t)(r / totalPixel), (u_int8_t)(g / totalPixel), (u_int8_t)(b / totalPixel));
 }
 
-std::unique_ptr<QuadTreeNode> BuildQuadTree(std::vector<RGBPixel> &image, int x, int y, int w, int h, double &threshold, int &minBlockSize, int &errorMeasurementChoice, int &imageWidth) {
+std::unique_ptr<QuadTreeNode> BuildQuadTree(std::vector<RGBPixel> &image, int x, int y, int w, int h, double threshold, int minBlockSize, int errorMeasurementChoice, int imageWidth) {
     RGBPixel avgColor = CalculateAverageColor(image, x, y, w, h, imageWidth);
     double error;
 
@@ -118,12 +120,12 @@ std::unique_ptr<QuadTreeNode> BuildQuadTree(std::vector<RGBPixel> &image, int x,
         break;
 
     case 4:
-        // Entropy (rentang 0-8)
+        // Entropy
         error = CalculateEntropy(image, x, y, w, h, avgColor, imageWidth);
         break;
 
     case 5:
-        // SSIM (rentang 0-1)
+        // SSIM
         double ssim = CalculateSSIM(image, x, y, w, h, avgColor, imageWidth);
         error = 1.0 - ssim;
         break;
@@ -172,7 +174,7 @@ void reconstructImage(std::vector<RGBPixel> &outputImage, std::unique_ptr<QuadTr
     reconstructImage(outputImage, node->bawahKanan, imageWidth);
 }
 
-double CalculateCompressionRatio(const std::string &uncompressedFile, const std::string &compressedFile) {
+double CalculateCompressionRatio(const std::string &uncompressedFile, const std::string &compressedFile, bool show) {
     struct stat uncompressedStat, compressedStat;
     if (stat(uncompressedFile.c_str(), &uncompressedStat) != 0) {
         throw ImageLoadException("Cannot get file size: " + uncompressedFile);
@@ -183,8 +185,10 @@ double CalculateCompressionRatio(const std::string &uncompressedFile, const std:
 
     double uncompressedSize = uncompressedStat.st_size;
     double compressedSize = compressedStat.st_size;
-    std::cout << "Ukuran Sebelum Kompresi: " << uncompressedSize << " bytes" << std::endl;
-    std::cout << "Ukuran Setelah Kompresi: " << compressedSize << " bytes" << std::endl;
+    if (show) {
+        std::cout << "Ukuran Sebelum Kompresi: " << uncompressedSize << " bytes" << std::endl;
+        std::cout << "Ukuran Setelah Kompresi: " << compressedSize << " bytes" << std::endl;
+    }
     return (1 - (compressedSize / uncompressedSize)) * 100.0;
 }
 
@@ -242,7 +246,7 @@ void SaveGif(const std::string &gifOutputPath, const std::vector<RGBPixel> &imag
     }
     
     ge_GIF* gif = ge_new_gif(gifOutputPath.c_str(), imageWidth, imageHeight, gifPalette, 8, 0, 0);
-    
+
     if (!gif) {
         std::cerr << "Failed to create GIF." << std::endl;
         delete quantizer;
@@ -291,7 +295,7 @@ void SaveGif(const std::string &gifOutputPath, const std::vector<RGBPixel> &imag
         }
         
         memcpy(gif->frame, frameIndexed.data(), imageWidth * imageHeight);
-        ge_add_frame(gif, 200);
+        ge_add_frame(gif, 100);
         
         nodes.swap(newNodes);
         std::vector<QuadTreeNode*>().swap(newNodes);
@@ -318,9 +322,17 @@ int main() {
         double threshold;
         int minBlockSize;
         double targetCompressionRatio;
+        double low, high;
 
         std::cout << "Masukkan alamat absolut ke gambar input (contoh: test/a.jpg): ";
         std::getline(std::cin, originalImagePath);
+
+        struct stat buffer;
+        while (stat(originalImagePath.c_str(), &buffer) != 0) {
+            std::cerr << "File tidak ditemukan: " << originalImagePath << std::endl;
+            std::cout << "Masukkan alamat absolut ke gambar input (contoh: test/a.jpg): ";
+            std::getline(std::cin, originalImagePath);
+        }
 
         std::cout << "Pilih metode perhitungan error:\n";
         std::cout << "1. Variansi\n";
@@ -331,15 +343,62 @@ int main() {
         std::cout << "Masukkan nomor metode (1-5): ";
         std::cin >> errorMeasurementChoice;
 
+        while (errorMeasurementChoice < 1 || errorMeasurementChoice > 5) {
+            std::cout << "Pilihan tidak valid. Silakan pilih antara 1-5: ";
+            std::cin >> errorMeasurementChoice;
+        }
+
+        switch (errorMeasurementChoice)
+        {
+        case 1:
+            // Variance
+            low = 0; high = 16256.25;
+            break;
+        case 2:
+            // Mean Absolute Deviation (MAD)
+            low = 0; high = 127.5;
+            break;
+        case 3:
+            // Max Pixel Difference
+            low = 0; high = 255;
+            break;
+
+        case 4:
+            // Entropy (rentang 0-8)
+            low = 0; high = 8;
+            break;
+
+        case 5:
+            // SSIM (rentang 0-1)
+            low = -1; high = 1;
+            break;
+        }
+
         std::cout << "Masukkan nilai threshold: ";
         std::cin >> threshold;
+
+        while (threshold < low || threshold > high) {
+            std::cout << "Nilai threshold tidak valid. Silakan masukkan nilai antara " << low << " dan " << high << ": ";
+            std::cin >> threshold;
+        }
 
         std::cout << "Masukkan ukuran blok minimum: ";
         std::cin >> minBlockSize;
 
-        std::cout << "Masukkan target rasio kompresi (0 untuk dinonaktifkan, 1.0 untuk 100%): ";
+        while (minBlockSize < 1) {
+            std::cout << "Ukuran blok minimum tidak valid. Silakan masukkan nilai lebih besar dari 0: ";
+            std::cin >> minBlockSize;
+        }
+
+        std::cout << "Masukkan target rasio kompresi (0 untuk menonaktifkan mode ini, 1.0 untuk 100%): ";
         std::cin >> targetCompressionRatio;
         std::cin.ignore();
+
+        while (targetCompressionRatio < 0.0 || targetCompressionRatio > 1.0) {
+            std::cout << "Rasio kompresi tidak valid. Silakan masukkan nilai antara 0.0 dan 1.0: ";
+            std::cin >> targetCompressionRatio;
+            std::cin.ignore();
+        }
 
         std::cout << "Masukkan alamat absolut untuk menyimpan gambar hasil kompresi (contoh: test/b.png): ";
         std::getline(std::cin, compressedImagePath);
@@ -347,24 +406,57 @@ int main() {
         std::cout << "Masukkan alamat absolut untuk menyimpan GIF (contoh: test/process.gif): ";
         std::getline(std::cin, gifOutputPath);
 
+        // originalImagePath = "test/ishow_speed.jpeg";
+        // compressedImagePath = "zero.jpg";
+        // gifOutputPath = "zero.gif";
+        // errorMeasurementChoice = 2;
+        // threshold = 127.5;
+        // minBlockSize = 500;
+        // targetCompressionRatio = 0.0;
+        // low = 0; high = 127.5;
+
         std::cout << "Memproses gambar..." << std::endl;
 
         auto startTime = std::chrono::high_resolution_clock::now();
 
+        std::unique_ptr<QuadTreeNode> root;
         std::vector<RGBPixel> image = LoadImage(originalImagePath, width, height);
-        auto root = BuildQuadTree(image, 0, 0, width, height, threshold, minBlockSize, errorMeasurementChoice, width);
+
+        if (targetCompressionRatio == 0.0) {
+            root = BuildQuadTree(image, 0, 0, width, height, threshold, minBlockSize, errorMeasurementChoice, width);
+        }
+        else {
+            // Mengasumsikan rasio bergantung sepenuhnya pada threshold
+            
+            int tempBlockSize = 1;
+            double L = low, R = high;
+
+            for (int _ = 0; _ < 20; _++) {
+                double M = (L + R) / 2.0;
+
+                root = BuildQuadTree(image, 0, 0, width, height, M, tempBlockSize, errorMeasurementChoice, width);
+
+                double compressionRatio = CalculateCompressionRatio(originalImagePath, compressedImagePath, false);
+                if (compressionRatio < targetCompressionRatio) {
+                    R = M;
+                }
+                else {
+                    L = M;
+                }
+            }
+        }
 
         std::vector<RGBPixel> outputImage(width * height);
         reconstructImage(outputImage, root, width);
 
-        SaveImage(compressedImagePath, outputImage, width, height);
+        SaveImage(compressedImagePath, outputImage, width, height, true);
         SaveGif(gifOutputPath, outputImage, root, width, height);
-
+        
         auto endTime = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
         std::cout << "Waktu pemrosesan: " << duration << " ms" << std::endl;
 
-        double compressionRatio = CalculateCompressionRatio(originalImagePath, compressedImagePath);
+        double compressionRatio = CalculateCompressionRatio(originalImagePath, compressedImagePath, 1);
         std::cout << "Rasio Kompresi: " << compressionRatio << "%" << std::endl;
         
         int maxDepth = GetMaxDepth(root);
