@@ -291,7 +291,7 @@ void SaveGif(const std::string &gifOutputPath, const std::vector<RGBPixel> &imag
         }
         
         memcpy(gif->frame, frameIndexed.data(), imageWidth * imageHeight);
-        ge_add_frame(gif, 50);
+        ge_add_frame(gif, 200);
         
         nodes.swap(newNodes);
         std::vector<QuadTreeNode*>().swap(newNodes);
@@ -318,15 +318,6 @@ int main() {
         double threshold;
         int minBlockSize;
         double targetCompressionRatio;
-
-        // DEBUG
-        // originalImagePath = "test/ishow_speed.jpeg";
-        // compressedImagePath = "test/speed.jpeg";
-        // gifOutputPath = "test/speed.gif";
-        // errorMeasurementChoice = 1;
-        // threshold = 10;
-        // minBlockSize = 200;
-        // targetCompressionRatio = 1;
 
         std::cout << "Masukkan alamat absolut ke gambar input (contoh: test/a.jpg): ";
         std::getline(std::cin, originalImagePath);
@@ -356,6 +347,10 @@ int main() {
         std::cout << "Masukkan alamat absolut untuk menyimpan GIF (contoh: test/process.gif): ";
         std::getline(std::cin, gifOutputPath);
 
+        std::cout << "Memproses gambar..." << std::endl;
+
+        auto startTime = std::chrono::high_resolution_clock::now();
+
         std::vector<RGBPixel> image = LoadImage(originalImagePath, width, height);
         auto root = BuildQuadTree(image, 0, 0, width, height, threshold, minBlockSize, errorMeasurementChoice, width);
 
@@ -364,6 +359,10 @@ int main() {
 
         SaveImage(compressedImagePath, outputImage, width, height);
         SaveGif(gifOutputPath, outputImage, root, width, height);
+
+        auto endTime = std::chrono::high_resolution_clock::now();
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
+        std::cout << "Waktu pemrosesan: " << duration << " ms" << std::endl;
 
         double compressionRatio = CalculateCompressionRatio(originalImagePath, compressedImagePath);
         std::cout << "Rasio Kompresi: " << compressionRatio << "%" << std::endl;
