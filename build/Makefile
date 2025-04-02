@@ -129,6 +129,19 @@ runner/fast:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/build
 .PHONY : runner/fast
 
+#=============================================================================
+# Target rules for targets named iff2gif_lib
+
+# Build rule for target.
+iff2gif_lib: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 iff2gif_lib
+.PHONY : iff2gif_lib
+
+# fast build rule for target.
+iff2gif_lib/fast:
+	$(MAKE) $(MAKESILENT) -f src/gif-library/iff2gif/CMakeFiles/iff2gif_lib.dir/build.make src/gif-library/iff2gif/CMakeFiles/iff2gif_lib.dir/build
+.PHONY : iff2gif_lib/fast
+
 src/ImageProcessing.o: src/ImageProcessing.cpp.o
 .PHONY : src/ImageProcessing.o
 
@@ -201,6 +214,30 @@ src/QuadTree.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/src/QuadTree.cpp.s
 .PHONY : src/QuadTree.cpp.s
 
+src/gifenc.o: src/gifenc.c.o
+.PHONY : src/gifenc.o
+
+# target to build an object file
+src/gifenc.c.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/src/gifenc.c.o
+.PHONY : src/gifenc.c.o
+
+src/gifenc.i: src/gifenc.c.i
+.PHONY : src/gifenc.i
+
+# target to preprocess a source file
+src/gifenc.c.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/src/gifenc.c.i
+.PHONY : src/gifenc.c.i
+
+src/gifenc.s: src/gifenc.c.s
+.PHONY : src/gifenc.s
+
+# target to generate assembly for a file
+src/gifenc.c.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/runner.dir/build.make CMakeFiles/runner.dir/src/gifenc.c.s
+.PHONY : src/gifenc.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -209,6 +246,7 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... iff2gif_lib"
 	@echo "... runner"
 	@echo "... src/ImageProcessing.o"
 	@echo "... src/ImageProcessing.i"
@@ -219,6 +257,9 @@ help:
 	@echo "... src/QuadTree.o"
 	@echo "... src/QuadTree.i"
 	@echo "... src/QuadTree.s"
+	@echo "... src/gifenc.o"
+	@echo "... src/gifenc.i"
+	@echo "... src/gifenc.s"
 .PHONY : help
 
 

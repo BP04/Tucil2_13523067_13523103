@@ -113,6 +113,7 @@ CMakeFiles/runner.dir/src/ImageProcessing.cpp.o: \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/mmintrin.h \
  /usr/lib/gcc/x86_64-linux-gnu/11/include/mm_malloc.h \
  /home/ben/stima/Tucil2_13523067_13523103/src/stb_image_write.h \
+ /home/ben/stima/Tucil2_13523067_13523103/src/gifenc.h \
  /home/ben/stima/Tucil2_13523067_13523103/src/QuadTree.hpp \
  /usr/include/c++/11/iostream /usr/include/c++/11/ostream \
  /usr/include/c++/11/ios /usr/include/c++/11/iosfwd \
@@ -223,6 +224,19 @@ CMakeFiles/runner.dir/src/ImageProcessing.cpp.o: \
  /usr/include/c++/11/bits/unordered_map.h \
  /usr/include/c++/11/bits/erase_if.h \
  /home/ben/stima/Tucil2_13523067_13523103/src/ImageLoadException.hpp \
+ /home/ben/stima/Tucil2_13523067_13523103/src/gif-library/iff2gif/neuquant.hpp \
+ /usr/include/c++/11/numeric /usr/include/c++/11/bits/stl_numeric.h \
+ /usr/include/c++/11/pstl/glue_numeric_defs.h /usr/include/c++/11/random \
+ /usr/include/c++/11/bits/random.h \
+ /usr/include/x86_64-linux-gnu/c++/11/bits/opt_random.h \
+ /usr/include/c++/11/bits/random.tcc /usr/include/c++/11/cfloat \
+ /usr/lib/gcc/x86_64-linux-gnu/11/include/float.h \
+ /home/ben/stima/Tucil2_13523067_13523103/src/gif-library/iff2gif/iff2gif.h \
+ /usr/include/c++/11/queue /usr/include/c++/11/deque \
+ /usr/include/c++/11/bits/stl_deque.h /usr/include/c++/11/bits/deque.tcc \
+ /usr/include/c++/11/bits/stl_queue.h \
+ /home/ben/stima/Tucil2_13523067_13523103/src/gif-library/iff2gif/types.h \
+ /home/ben/stima/Tucil2_13523067_13523103/src/gif-library/iff2gif/iff.h \
  /usr/include/x86_64-linux-gnu/sys/stat.h \
  /usr/include/x86_64-linux-gnu/bits/stat.h \
  /usr/include/x86_64-linux-gnu/bits/struct_stat.h \

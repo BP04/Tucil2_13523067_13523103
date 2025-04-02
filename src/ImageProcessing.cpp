@@ -4,9 +4,12 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
 
+#include "gifenc.h"
 #include "QuadTree.hpp"
 #include "Metrics.hpp"
 #include "ImageLoadException.hpp"
+
+#include "gif-library/iff2gif/neuquant.hpp"
 
 #include <iostream>
 #include <sys/stat.h>
@@ -73,9 +76,9 @@ void SaveImage(std::string fileName, const std::vector<RGBPixel> &image, int &wi
     }
 
     if (success) {
-        std::cout << "Saved image to " << fileName << std::endl;
+        std::cout << "Gambar berhasil disimpan di " << fileName << std::endl;
     } else {
-        std::cerr << "Failed to save image: " << fileName << std::endl;
+        std::cerr << "Gambar tidak berhasil disimpan" << std::endl;
     }
 }
 
@@ -171,14 +174,17 @@ void reconstructImage(std::vector<RGBPixel> &outputImage, std::unique_ptr<QuadTr
 
 double CalculateCompressionRatio(const std::string &uncompressedFile, const std::string &compressedFile) {
     struct stat uncompressedStat, compressedStat;
-    if (stat(uncompressedFile.c_str(), &uncompressedStat) != 0 || stat(compressedFile.c_str(), &compressedStat) != 0) {
-        throw ImageLoadException("Cannot get file size: " + uncompressedFile + " or " + compressedFile);
+    if (stat(uncompressedFile.c_str(), &uncompressedStat) != 0) {
+        throw ImageLoadException("Cannot get file size: " + uncompressedFile);
+    }
+    if (stat(compressedFile.c_str(), &compressedStat) != 0) {
+        throw ImageLoadException("Cannot get file size: " + compressedFile);
     }
 
     double uncompressedSize = uncompressedStat.st_size;
     double compressedSize = compressedStat.st_size;
-    std::cout << "Uncompressed Size: " << uncompressedSize << " bytes" << std::endl;
-    std::cout << "Compressed Size: " << compressedSize << " bytes" << std::endl;
+    std::cout << "Ukuran Sebelum Kompresi: " << uncompressedSize << " bytes" << std::endl;
+    std::cout << "Ukuran Setelah Kompresi: " << compressedSize << " bytes" << std::endl;
     return (1 - (compressedSize / uncompressedSize)) * 100.0;
 }
 
@@ -212,6 +218,95 @@ int GetNodeCount(std::unique_ptr<QuadTreeNode> &node) {
            GetNodeCount(node->bawahKanan) + 1;
 }
 
+void SaveGif(const std::string &gifOutputPath, const std::vector<RGBPixel> &image, std::unique_ptr<QuadTreeNode> &root, int imageWidth, int imageHeight) {
+    std::vector<uint8_t> rgbData(image.size() * 3);
+    for (size_t i = 0; i < image.size(); ++i) {
+        rgbData[i * 3 + 0] = image[i].r;
+        rgbData[i * 3 + 1] = image[i].g;
+        rgbData[i * 3 + 2] = image[i].b;
+    }
+    
+    NeuQuant* neuquant = new NeuQuant(256);
+    Quantizer* quantizer = neuquant;
+    quantizer->AddPixels(rgbData.data(), image.size());
+    Palette palette = quantizer->GetPalette();
+    
+    uint8_t gifPalette[256 * 3];
+    
+    memset(gifPalette, 0, sizeof(gifPalette));
+    
+    for (size_t i = 0; i < std::min(palette.size(), size_t(256)); ++i) {
+        gifPalette[i * 3 + 0] = palette[i].red;
+        gifPalette[i * 3 + 1] = palette[i].green;
+        gifPalette[i * 3 + 2] = palette[i].blue;
+    }
+    
+    ge_GIF* gif = ge_new_gif(gifOutputPath.c_str(), imageWidth, imageHeight, gifPalette, 8, 0, 0);
+    
+    if (!gif) {
+        std::cerr << "Failed to create GIF." << std::endl;
+        delete quantizer;
+        return;
+    }
+    
+    std::vector<QuadTreeNode*> nodes, newNodes;
+    nodes.push_back(root.get());
+    
+    int counter = 0;
+    bool cont = true;
+    
+    while (cont && !nodes.empty()) {
+        cont = false;
+        std::vector<uint8_t> frameRGB(imageWidth * imageHeight * 3);
+        std::vector<uint8_t> frameIndexed(imageWidth * imageHeight);
+        
+        for (QuadTreeNode* node : nodes) {
+            if (!node) continue;
+            
+            for (int i = 0; i < node->height; i++) {
+                for (int j = 0; j < node->width; j++) {
+                    int xx = node->x + j, yy = node->y + i;
+                    int idx = yy * imageWidth + xx;
+                    
+                    frameRGB[idx * 3 + 0] = node->color.r;
+                    frameRGB[idx * 3 + 1] = node->color.g;
+                    frameRGB[idx * 3 + 2] = node->color.b;
+                    
+                    ColorRegister pixel = {node->color.r, node->color.g, node->color.b};
+                    frameIndexed[idx] = neuquant->lookup(pixel);
+                }
+            }
+            
+
+            if (node->isLeaf) {
+                newNodes.push_back(node);
+            }
+            else {
+                cont = true;
+                newNodes.push_back(node->atasKiri.get());
+                newNodes.push_back(node->atasKanan.get());
+                newNodes.push_back(node->bawahKiri.get());
+                newNodes.push_back(node->bawahKanan.get());
+            }
+        }
+        
+        memcpy(gif->frame, frameIndexed.data(), imageWidth * imageHeight);
+        ge_add_frame(gif, 50);
+        
+        nodes.swap(newNodes);
+        std::vector<QuadTreeNode*>().swap(newNodes);
+    }
+    
+    std::vector<QuadTreeNode*>().swap(nodes);
+    std::vector<QuadTreeNode*>().swap(newNodes);
+    delete quantizer;
+    
+    if (gif) {
+        ge_close_gif(gif);
+        std::cout << "GIF berhasil disimpan di " << gifOutputPath << std::endl;
+    }
+}
+
 int main() {
     try {
         int width, height;
@@ -224,7 +319,16 @@ int main() {
         int minBlockSize;
         double targetCompressionRatio;
 
-        std::cout << "Masukkan path ke gambar input (contoh: test/a.jpg): ";
+        // DEBUG
+        // originalImagePath = "test/ishow_speed.jpeg";
+        // compressedImagePath = "test/speed.jpeg";
+        // gifOutputPath = "test/speed.gif";
+        // errorMeasurementChoice = 1;
+        // threshold = 10;
+        // minBlockSize = 200;
+        // targetCompressionRatio = 1;
+
+        std::cout << "Masukkan alamat absolut ke gambar input (contoh: test/a.jpg): ";
         std::getline(std::cin, originalImagePath);
 
         std::cout << "Pilih metode perhitungan error:\n";
@@ -232,7 +336,7 @@ int main() {
         std::cout << "2. Rata-rata Deviasi Absolut (MAD)\n";
         std::cout << "3. Selisih Piksel Maksimum\n";
         std::cout << "4. Entropi\n";
-        std::cout << "5. SSIM (Structural Similarity Index) [Bonus]\n";
+        std::cout << "5. SSIM (Structural Similarity Index)\n";
         std::cout << "Masukkan nomor metode (1-5): ";
         std::cin >> errorMeasurementChoice;
 
@@ -246,28 +350,29 @@ int main() {
         std::cin >> targetCompressionRatio;
         std::cin.ignore();
 
-        std::cout << "Masukkan path untuk menyimpan gambar hasil kompresi (contoh: test/b.jpg): ";
+        std::cout << "Masukkan alamat absolut untuk menyimpan gambar hasil kompresi (contoh: test/b.png): ";
         std::getline(std::cin, compressedImagePath);
 
-        std::cout << "Masukkan path untuk menyimpan GIF (contoh: test/process): ";
+        std::cout << "Masukkan alamat absolut untuk menyimpan GIF (contoh: test/process.gif): ";
         std::getline(std::cin, gifOutputPath);
 
         std::vector<RGBPixel> image = LoadImage(originalImagePath, width, height);
         auto root = BuildQuadTree(image, 0, 0, width, height, threshold, minBlockSize, errorMeasurementChoice, width);
-        
+
         std::vector<RGBPixel> outputImage(width * height);
         reconstructImage(outputImage, root, width);
 
         SaveImage(compressedImagePath, outputImage, width, height);
+        SaveGif(gifOutputPath, outputImage, root, width, height);
 
         double compressionRatio = CalculateCompressionRatio(originalImagePath, compressedImagePath);
-        std::cout << "Compression Ratio: " << compressionRatio << "%" << std::endl;
+        std::cout << "Rasio Kompresi: " << compressionRatio << "%" << std::endl;
         
         int maxDepth = GetMaxDepth(root);
-        std::cout << "Max Depth: " << maxDepth << std::endl;
+        std::cout << "Kedalaman Maksimum: " << maxDepth << std::endl;
         
         int nodeCount = GetNodeCount(root);
-        std::cout << "Number of Nodes: " << nodeCount << std::endl;
+        std::cout << "Banyak Simpul: " << nodeCount << std::endl;
     }
     catch (const ImageLoadException &e) {
         std::cerr << "Error: " << e.what() << std::endl;

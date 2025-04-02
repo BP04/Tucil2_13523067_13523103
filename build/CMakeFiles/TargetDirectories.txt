@@ -1,3 +1,6 @@
 /home/ben/stima/Tucil2_13523067_13523103/build/CMakeFiles/runner.dir
 /home/ben/stima/Tucil2_13523067_13523103/build/CMakeFiles/edit_cache.dir
 /home/ben/stima/Tucil2_13523067_13523103/build/CMakeFiles/rebuild_cache.dir
+/home/ben/stima/Tucil2_13523067_13523103/build/src/gif-library/iff2gif/CMakeFiles/iff2gif_lib.dir
+/home/ben/stima/Tucil2_13523067_13523103/build/src/gif-library/iff2gif/CMakeFiles/edit_cache.dir
+/home/ben/stima/Tucil2_13523067_13523103/build/src/gif-library/iff2gif/CMakeFiles/rebuild_cache.dir
