@@ -1,1 +1,0 @@
-/usr/bin/c++ CMakeFiles/image_tool.dir/src/ImageProcessing.cpp.o CMakeFiles/image_tool.dir/src/Metrics.cpp.o CMakeFiles/image_tool.dir/src/QuadTree.cpp.o -o ../bin/image_tool 

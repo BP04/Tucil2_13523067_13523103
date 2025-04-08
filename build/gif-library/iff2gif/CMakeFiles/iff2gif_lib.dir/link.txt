@@ -1,2 +1,0 @@
-/usr/bin/ar qc libiff2gif_lib.a CMakeFiles/iff2gif_lib.dir/gifwrite.cpp.o CMakeFiles/iff2gif_lib.dir/iffread.cpp.o CMakeFiles/iff2gif_lib.dir/chunky.cpp.o CMakeFiles/iff2gif_lib.dir/planar.cpp.o CMakeFiles/iff2gif_lib.dir/ppunpack.cpp.o CMakeFiles/iff2gif_lib.dir/rotate.cpp.o CMakeFiles/iff2gif_lib.dir/mediancut.cpp.o CMakeFiles/iff2gif_lib.dir/quantizer.cpp.o CMakeFiles/iff2gif_lib.dir/palette.cpp.o
-/usr/bin/ranlib libiff2gif_lib.a
