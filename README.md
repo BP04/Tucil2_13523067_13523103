@@ -6,19 +6,41 @@ This program is a C++ application for image compression using a quadtree data st
 #### Linux 
 ```bash
 sudo apt update
-sudo apt install libjpeg-turbo8-dev libgif-dev build-essential cmake
+sudo apt install cmake
 ```
 #### Windows 
-```bash
-```
+Install CMake [here](https://cmake.org/download/).
+
 ## How to Run Program
+1. Clone the repository
+
+2. Build the program (Optional)
 ```
 mkdir build
 cd build
 cmake ..
 make
-../bin/runner
+cd ..
+mkdir build-win
+cd build-win
+cmake .. -DCMAKE_TOOLCHAIN_FILE=../mingw-toolchain.cmake
+make
 ```
+
+3. Run the program
+
+Step 2 is not required as the executables are provided in this repository.
+
+On Linux
+```
+./bin/runner
+```
+
+On Windows
+```
+.\bin\runner-win.exe
+```
+
 ## How to Use Program 
 - Set absolute path to your input image (e.g. /home/owen/test/a.jpg)
 
@@ -36,3 +58,7 @@ make
 
 ## Precaution
 Setting up a low threshold with low minimum block size (e.g. 1) can force the quadtree to recurse so deeply that you overflow the call stack. This condition lead to out‑of‑bounds pixel accesses (stack overflow), causing a segmentation fault.
+
+## Author
+Benedict Presley 13523067
+Steven Owen Liauw 13523103
