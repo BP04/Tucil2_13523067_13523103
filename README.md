@@ -28,6 +28,7 @@ make
 ```
 
 3. Run the program
+
 Step 2 is not required as the executables are provided in this repository.
 
 On Linux
@@ -57,3 +58,7 @@ On Windows
 
 ## Precaution
 Setting up a low threshold with low minimum block size (e.g. 1) can force the quadtree to recurse so deeply that you overflow the call stack. This condition lead to out‑of‑bounds pixel accesses (stack overflow), causing a segmentation fault.
+
+## Author
+Benedict Presley 13523067
+Steven Owen Liauw 13523103
