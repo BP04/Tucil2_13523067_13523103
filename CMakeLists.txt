@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(OUTPUT_BIN_DIR ${CMAKE_SOURCE_DIR}/bin)
 
 if (MINGW OR WIN32)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libstdc++ -static-libgcc")
@@ -27,6 +27,13 @@ set(SOURCES
     src/gifenc.c
 )
 
-add_executable(runner ${SOURCES})
+if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    set(EXECUTABLE_NAME runner-win)
+else()
+    set(EXECUTABLE_NAME runner)
+endif()
 
-target_link_libraries(runner PRIVATE iff2gif_lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${OUTPUT_BIN_DIR})
+
+add_executable(${EXECUTABLE_NAME} ${SOURCES})
+target_link_libraries(${EXECUTABLE_NAME} PRIVATE iff2gif_lib)
