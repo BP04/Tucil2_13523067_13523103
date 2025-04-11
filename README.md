@@ -12,7 +12,7 @@ sudo apt install cmake g++ mingw-w64
 1. Install [CMake](https://cmake.org/download/)
 2. Install MinGW-w64.
     - Use [MSYS2](https://www.msys2.org/) or install [WinLibs MinGW-w64](https://www.winlibs.com/)
-    - Make sure to add ```bin/``` folder to your ```PATH```.
+    - Make sure to add ```bin/``` folder to your ```PATH```
 
 ## How to Run Program
 1. Clone the repository
