@@ -17,6 +17,7 @@ mkdir build
 cd build
 cmake ..
 make
+../bin/runner
 ```
 ## How to Use Program 
 - Set absolute path to your input image (e.g. /home/owen/test/a.jpg)
