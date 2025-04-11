@@ -23,7 +23,7 @@ make
 cd ..
 mkdir build-win
 cd build-win
-cmake
+cmake .. -DCMAKE_TOOLCHAIN_FILE=../mingw-toolchain.cmake
 make
 ```
 
