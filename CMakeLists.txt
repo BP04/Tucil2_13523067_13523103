@@ -2,9 +2,15 @@ cmake_minimum_required(VERSION 3.10)
 project(ImageCompressor)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libstdc++ -static-libgcc")
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+if (MINGW OR WIN32)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libstdc++ -static-libgcc")
+endif()
+
 set(BUILD_SHARED_LIBS OFF)
 
 add_subdirectory(src/gif-library/iff2gif)
@@ -22,4 +28,5 @@ set(SOURCES
 )
 
 add_executable(runner ${SOURCES})
+
 target_link_libraries(runner PRIVATE iff2gif_lib)

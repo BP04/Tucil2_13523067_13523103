@@ -15,8 +15,6 @@
 #include <iomanip>
 #include <sys/stat.h>
 #include <chrono>
-#include <jpeglib.h>
-#include <jerror.h>
 #include <fstream>
 #include <string>
 
@@ -98,7 +96,7 @@ RGBPixel CalculateAverageColor(const std::vector<RGBPixel> &image, int x, int y,
         }
     }
     int totalPixel = width * height;
-    return RGBPixel((u_int8_t)(r / totalPixel), (u_int8_t)(g / totalPixel), (u_int8_t)(b / totalPixel));
+    return RGBPixel((uint8_t)(r / totalPixel), (uint8_t)(g / totalPixel), (uint8_t)(b / totalPixel));
 }
 
 std::unique_ptr<QuadTreeNode> BuildQuadTree(std::vector<RGBPixel> &image, int x, int y, int w, int h, double threshold, int minBlockSize, int errorMeasurementChoice, int imageWidth) {
