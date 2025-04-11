@@ -306,6 +306,7 @@ void SaveGif(const std::string &gifOutputPath, const std::vector<RGBPixel> &imag
         }
         else {
             ge_add_frame(gif, 0);
+            gif->nframes = 0;
         }
 
         nodes.swap(newNodes);
