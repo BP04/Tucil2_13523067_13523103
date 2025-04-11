@@ -226,8 +226,6 @@ int GetNodeCount(std::unique_ptr<QuadTreeNode> &node) {
 }
 
 void SaveGif(const std::string &gifOutputPath, const std::vector<RGBPixel> &image, std::unique_ptr<QuadTreeNode> &root, int imageWidth, int imageHeight) {
-    int maxDepth = GetMaxDepth(root);
-    
     std::vector<uint8_t> rgbData(image.size() * 3);
     for (size_t i = 0; i < image.size(); ++i) {
         rgbData[i * 3 + 0] = image[i].r;
@@ -237,17 +235,26 @@ void SaveGif(const std::string &gifOutputPath, const std::vector<RGBPixel> &imag
     
     NeuQuant* neuquant = new NeuQuant(256);
     Quantizer* quantizer = neuquant;
-    quantizer->AddPixels(rgbData.data(), image.size());
-    Palette palette = quantizer->GetPalette();
-    
+    Palette palette;
+
     uint8_t gifPalette[256 * 3];
-    
     memset(gifPalette, 0, sizeof(gifPalette));
-    
-    for (size_t i = 0; i < std::min(palette.size(), size_t(256)); ++i) {
-        gifPalette[i * 3 + 0] = palette[i].red;
-        gifPalette[i * 3 + 1] = palette[i].green;
-        gifPalette[i * 3 + 2] = palette[i].blue;
+
+    if((int)image.size() > 256) {
+        quantizer->AddPixels(rgbData.data(), image.size());
+        Palette palette = quantizer->GetPalette();
+        for (size_t i = 0; i < std::min(palette.size(), size_t(256)); ++i) {
+            gifPalette[i * 3 + 0] = palette[i].red;
+            gifPalette[i * 3 + 1] = palette[i].green;
+            gifPalette[i * 3 + 2] = palette[i].blue;
+        }
+    }
+    else {
+        for (size_t i = 0; i < image.size(); ++i) {
+            gifPalette[i * 3 + 0] = image[i].r;
+            gifPalette[i * 3 + 1] = image[i].g;
+            gifPalette[i * 3 + 2] = image[i].b;
+        }
     }
     
     ge_GIF* gif = ge_new_gif(gifOutputPath.c_str(), imageWidth, imageHeight, gifPalette, 8, 0, 0);
@@ -268,7 +275,7 @@ void SaveGif(const std::string &gifOutputPath, const std::vector<RGBPixel> &imag
         cont = false;
         std::vector<uint8_t> frameRGB(imageWidth * imageHeight * 3);
         std::vector<uint8_t> frameIndexed(imageWidth * imageHeight);
-        
+
         for (QuadTreeNode* node : nodes) {
             if (!node) continue;
             
@@ -301,13 +308,7 @@ void SaveGif(const std::string &gifOutputPath, const std::vector<RGBPixel> &imag
         
         memcpy(gif->frame, frameIndexed.data(), imageWidth * imageHeight);
         
-        if(maxDepth > 1) {
-            ge_add_frame(gif, 100);
-        }
-        else {
-            ge_add_frame(gif, 0);
-            gif->nframes = 0;
-        }
+        ge_add_frame(gif, 100);
 
         nodes.swap(newNodes);
         std::vector<QuadTreeNode*>().swap(newNodes);
@@ -459,7 +460,7 @@ int main() {
         reconstructImage(outputImage, root, width);
 
         SaveImage(compressedImagePath, outputImage, width, height, true);
-        SaveGif(gifOutputPath, outputImage, root, width, height);
+        SaveGif(gifOutputPath, image, root, width, height);
         
         auto endTime = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime).count();
