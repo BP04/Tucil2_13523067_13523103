@@ -226,6 +226,8 @@ int GetNodeCount(std::unique_ptr<QuadTreeNode> &node) {
 }
 
 void SaveGif(const std::string &gifOutputPath, const std::vector<RGBPixel> &image, std::unique_ptr<QuadTreeNode> &root, int imageWidth, int imageHeight) {
+    int maxDepth = GetMaxDepth(root);
+    
     std::vector<uint8_t> rgbData(image.size() * 3);
     for (size_t i = 0; i < image.size(); ++i) {
         rgbData[i * 3 + 0] = image[i].r;
@@ -298,8 +300,14 @@ void SaveGif(const std::string &gifOutputPath, const std::vector<RGBPixel> &imag
         }
         
         memcpy(gif->frame, frameIndexed.data(), imageWidth * imageHeight);
-        ge_add_frame(gif, 100);
         
+        if(maxDepth > 1) {
+            ge_add_frame(gif, 100);
+        }
+        else {
+            ge_add_frame(gif, 0);
+        }
+
         nodes.swap(newNodes);
         std::vector<QuadTreeNode*>().swap(newNodes);
     }
