@@ -12,6 +12,7 @@
 #include "gif-library/iff2gif/neuquant.hpp"
 
 #include <iostream>
+#include <iomanip>
 #include <sys/stat.h>
 #include <chrono>
 #include <jpeglib.h>
@@ -101,6 +102,10 @@ RGBPixel CalculateAverageColor(const std::vector<RGBPixel> &image, int x, int y,
 }
 
 std::unique_ptr<QuadTreeNode> BuildQuadTree(std::vector<RGBPixel> &image, int x, int y, int w, int h, double threshold, int minBlockSize, int errorMeasurementChoice, int imageWidth) {
+    if(w <= 0 || h <= 0) {
+        return nullptr;
+    }
+    
     RGBPixel avgColor = CalculateAverageColor(image, x, y, w, h, imageWidth);
     double error;
 
@@ -152,7 +157,7 @@ std::unique_ptr<QuadTreeNode> BuildQuadTree(std::vector<RGBPixel> &image, int x,
 void reconstructImage(std::vector<RGBPixel> &outputImage, std::unique_ptr<QuadTreeNode> &node, int &imageWidth) {
     if (!node)
     {
-        throw ImageLoadException("Node is null");
+        return;
     }
 
     if (node->isLeaf)
@@ -406,15 +411,6 @@ int main() {
         std::cout << "Masukkan alamat absolut untuk menyimpan GIF (contoh: test/process.gif): ";
         std::getline(std::cin, gifOutputPath);
 
-        // originalImagePath = "test/ishow_speed.jpeg";
-        // compressedImagePath = "zero.jpg";
-        // gifOutputPath = "zero.gif";
-        // errorMeasurementChoice = 2;
-        // threshold = 127.5;
-        // minBlockSize = 500;
-        // targetCompressionRatio = 0.0;
-        // low = 0; high = 127.5;
-
         std::cout << "Memproses gambar..." << std::endl;
 
         auto startTime = std::chrono::high_resolution_clock::now();
@@ -422,31 +418,37 @@ int main() {
         std::unique_ptr<QuadTreeNode> root;
         std::vector<RGBPixel> image = LoadImage(originalImagePath, width, height);
 
+        std::vector<RGBPixel> outputImage(width * height);
+
         if (targetCompressionRatio == 0.0) {
             root = BuildQuadTree(image, 0, 0, width, height, threshold, minBlockSize, errorMeasurementChoice, width);
         }
         else {
             // Mengasumsikan rasio bergantung sepenuhnya pada threshold
             
+            targetCompressionRatio *= 100.0;
+
             int tempBlockSize = 1;
-            double L = low, R = high;
+            long double L = low, R = high;
 
             for (int _ = 0; _ < 20; _++) {
-                double M = (L + R) / 2.0;
+                long double M = (L + R) / 2.0;
 
                 root = BuildQuadTree(image, 0, 0, width, height, M, tempBlockSize, errorMeasurementChoice, width);
 
+                outputImage = std::vector<RGBPixel>(width * height);
+                reconstructImage(outputImage, root, width);
+                SaveImage(compressedImagePath, outputImage, width, height, false);
                 double compressionRatio = CalculateCompressionRatio(originalImagePath, compressedImagePath, false);
                 if (compressionRatio < targetCompressionRatio) {
-                    R = M;
+                    L = M;
                 }
                 else {
-                    L = M;
+                    R = M;
                 }
             }
         }
 
-        std::vector<RGBPixel> outputImage(width * height);
         reconstructImage(outputImage, root, width);
 
         SaveImage(compressedImagePath, outputImage, width, height, true);
@@ -457,7 +459,7 @@ int main() {
         std::cout << "Waktu pemrosesan: " << duration << " ms" << std::endl;
 
         double compressionRatio = CalculateCompressionRatio(originalImagePath, compressedImagePath, 1);
-        std::cout << "Rasio Kompresi: " << compressionRatio << "%" << std::endl;
+        std::cout << std::fixed << std::setprecision(6) << "Rasio Kompresi: " << compressionRatio << "%" << std::endl;
         
         int maxDepth = GetMaxDepth(root);
         std::cout << "Kedalaman Maksimum: " << maxDepth << std::endl;

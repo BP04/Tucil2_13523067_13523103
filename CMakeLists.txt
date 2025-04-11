@@ -4,11 +4,14 @@ project(ImageCompressor)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static -static-libstdc++ -static-libgcc")
+set(BUILD_SHARED_LIBS OFF)
+
 add_subdirectory(src/gif-library/iff2gif)
 
 include_directories(
     ${CMAKE_SOURCE_DIR}/src
-    ${CMAKE_SOURCE_DIR}/gif-library/iff2gif
+    ${CMAKE_SOURCE_DIR}/src/gif-library/iff2gif
 )
 
 set(SOURCES
