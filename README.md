@@ -3,13 +3,16 @@
 This program is a C++ application for image compression using a quadtree data structure, offering five metrics: variance, mean absolute deviation (MAD), maximum pixel difference, entropy, and the Structural Similarity Index (SSIM). Users can either input a threshold value directly or specify a target compression ratio, and the program will automatically adjust the threshold via binary search to achieve the desired ratio. Additionally, each quadtree subdivision step is recorded and rendered as a GIF animation to provide a visualization of the block‑based compression process.
 
 ## Requirements and Instalation
-#### Linux 
+#### Linux (Ubuntu/Debian)
 ```bash
 sudo apt update
-sudo apt install cmake
+sudo apt install cmake g++ mingw-w64
 ```
 #### Windows 
-Install CMake [here](https://cmake.org/download/).
+1. Install [CMake](https://cmake.org/download/)
+2. Install MinGW-w64.
+    - Use [MSYS2](https://www.msys2.org/) or install [WinLibs MinGW-w64](https://www.winlibs.com/)
+    - Make sure to add ```bin/``` folder to your ```PATH```.
 
 ## How to Run Program
 1. Clone the repository
@@ -31,7 +34,7 @@ make
 
 Step 2 is not required as the executables are provided in this repository.
 
-On Linux
+On Linux (Ubuntu/Debian)
 ```
 ./bin/runner
 ```
