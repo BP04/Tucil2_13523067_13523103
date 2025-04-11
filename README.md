@@ -31,5 +31,5 @@ make
 
 - Set absolute path to save the GIF (e.g. /home/owen/test/aGif.jpg)
 
-## <h2 style="color: red;">Precaution</h2>
+## <span style="color: red;">Precaution</span>
 Setting up low threshold with low minimum block size (e.g. 1) can force the quadtree to recurse so deeply that you overflow the call stack. This condition lead to out‑of‑bounds pixel accesses (stack overflow), causing a segmentation fault.
